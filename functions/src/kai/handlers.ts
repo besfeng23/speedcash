@@ -1,5 +1,4 @@
 
-'use server';
 
 import { HttpsError } from 'firebase-functions/v2/https';
 import { z } from 'zod';

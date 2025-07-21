@@ -1,6 +1,4 @@
 
-'use server';
-
 import { z } from 'zod';
 import * as adminHandlers from './admin/handlers';
 import * as kycHandlers from './kyc/handlers';
@@ -16,19 +14,24 @@ const dispatcherSchema = z.object({
   payload: z.any(),
 });
 
-export const cpayDispatcher = onRequest({ region: 'us-central1' }, async (req, res) => {
+export const cpayDispatcher = onRequest({ region: 'asia-southeast1' }, async (req, res) => {
+  const allowedOrigin = 'https://cpay5--applez-dch9v.asia-east1.hosted.app'; // CORS fix deployed
   // Handle preflight OPTIONS request
   if (req.method === 'OPTIONS') {
-    res.set('Access-Control-Allow-Origin', '*');
+    res.set('Access-Control-Allow-Origin', allowedOrigin);
+    res.set('Vary', 'Origin');
     res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.set('Access-Control-Allow-Credentials', 'true'); // Remove if not using credentials
     res.set('Access-Control-Max-Age', '3600');
     res.status(204).send('');
     return;
   }
 
   // Set CORS headers for all other requests
-  res.set('Access-Control-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Origin', allowedOrigin);
+  res.set('Vary', 'Origin');
+  res.set('Access-Control-Allow-Credentials', 'true'); // Remove if not using credentials
 
   try {
     const { action, payload } = dispatcherSchema.parse(req.body);

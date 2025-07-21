@@ -1,5 +1,4 @@
 
-'use server';
 
 /**
  * @fileOverview An AI assistant flow that answers user queries and analyzes user intent.

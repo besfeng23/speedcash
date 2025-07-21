@@ -4,16 +4,14 @@
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },
-  "functions": [
-    {
-      "source": "functions",
-      "codebase": "default",
-      "runtime": "nodejs20",
-      "ignore": ["node_modules", ".git", "firebase-debug.log", "firebase-debug.*.log"],
-      "region": ["asia-northeast1"],
-      "secrets": ["POSTMARK_API_KEY", "PAYMENT_GATEWAY_SECRET"]
-    }
-  ],
+  "functions": {
+    "source": "functions",
+    "codebase": "default",
+    "runtime": "nodejs20",
+    "ignore": ["node_modules", ".git", "firebase-debug.log", "firebase-debug.*.log"],
+    "region": "asia-southeast1",
+    "secrets": ["POSTMARK_API_KEY", "PAYMENT_GATEWAY_SECRET"]
+  },
   "storage": {
     "rules": "storage.rules"
   },

@@ -1,5 +1,4 @@
 
-'use server';
 
 /**
  * @fileOverview A Genkit tool to generate an image from a text prompt.
