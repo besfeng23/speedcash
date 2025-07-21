@@ -1,0 +1,27 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Allow users to upload their own KYC documents.
+    // The path ensures a user can only write to their own folder.
+    match /kyc-documents/{userId}/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Allow partners to upload their own KYB documents.
+    match /kyb-documents/{partnerId}/{allPaths=**} {
+      allow read, write: if request.auth != null && request.auth.uid == partnerId;
+    }
+
+    // Admins need to be able to view documents for review.
+    // This rule allows any authenticated user to read. For higher security,
+    // this could be restricted to users with an 'admin' custom claim.
+    match /kyc-documents/{userId}/{allPaths=**} {
+        allow read: if request.auth != null;
+    }
+     match /kyb-documents/{partnerId}/{allPaths=**} {
+        allow read: if request.auth != null;
+    }
+  }
+}

@@ -1,0 +1,28 @@
+
+{
+  "parameters": {
+    "remittance_fee_php": {
+      "defaultValue": {
+        "value": "150"
+      },
+      "description": "The fee in PHP for processing an international remittance.",
+      "valueType": "NUMBER"
+    },
+    "is_buy_load_enabled": {
+      "defaultValue": {
+        "value": "true"
+      },
+      "description": "Controls the visibility of the 'Buy Load' feature in the consumer app.",
+      "valueType": "BOOLEAN"
+    }
+  },
+  "version": {
+    "versionNumber": "1",
+    "updateTime": "2024-01-01T12:00:00Z",
+    "updateUser": {
+      "email": "system@cpay.com"
+    },
+    "updateOrigin": "CONSOLE",
+    "updateType": "INCREMENTAL_UPDATE"
+  }
+}

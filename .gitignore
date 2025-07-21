@@ -1,0 +1,47 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+.yarn/install-state.gz
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# build
+/build
+/dist
+
+# misc
+.DS_Store
+*.pem
+*.log
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+# firebase
+.firebase
+firebase-debug.log
+firebase-debug.*.log
+
+# environment variables
+.env
+.env*.local
+
+#functions
+/functions/lib
+
+# package manager lock files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml

@@ -1,0 +1,108 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // --- Helper Functions ---
+    function isAuth() {
+      return request.auth != null;
+    }
+    function isOwner(userId) {
+      return isAuth() && request.auth.uid == userId;
+    }
+    function getRole() {
+      return request.auth.token.role;
+    }
+    function isAdmin() {
+      return isAuth() && (getRole() == 'admin' || getRole() == 'superadmin');
+    }
+    function isSuperAdmin() {
+      return isAuth() && getRole() == 'superadmin';
+    }
+    function isPartner() {
+      return isAuth() && getRole() == 'partner';
+    }
+    function getPartnerId() {
+      return request.auth.token.partnerId;
+    }
+
+    // --- User Profile ---
+    // Users can read/write their own profile. Admins can read anyone's profile.
+    match /users/{userId} {
+      allow read: if isOwner(userId) || isAdmin();
+      allow create: if isAuth(); // Allow creation during signup
+      allow update: if isOwner(userId) || isAdmin(); // Admins can update roles etc.
+      
+      // Wallets are private to the user. Admins can view.
+      match /wallets/{walletId} {
+        allow read: if isOwner(userId) || isAdmin();
+        allow write: if isOwner(userId); // Only user can change their balance via transactions
+      }
+
+      // Kai interactions are private to the user. Admins can view.
+      match /kai_interactions/{interactionId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+    }
+
+    // --- Transactions ---
+    // Users can read transactions they are a part of.
+    // Partners can read transactions where they are the receiver.
+    // Admins can read all transactions.
+    match /transactions/{transactionId} {
+      allow read: if isAuth() && (resource.data.userIds.hasAny([request.auth.uid]) || isAdmin());
+      allow create: if isAuth(); // Transactions created by backend functions
+      allow update: if isAdmin(); // Only admins can update status (e.g. approve withdrawals)
+    }
+
+    // --- Cashout Requests (Admin Only) ---
+    // Only admins can read/write cashout requests for the approval queue.
+    match /cashout_requests/{requestId} {
+      allow read, write: if isAdmin();
+      allow create: if isAuth(); // Users create these via a callable function
+    }
+
+    // --- KYC Submissions (Admin Only for read/write) ---
+    // Users can create their own submission. Admins can manage them.
+    match /kyc_submissions/{userId} {
+       allow read: if isOwner(userId) || isAdmin();
+       allow create, update: if isOwner(userId); // User submitting their own form
+       allow write: if isAdmin(); // Admins can update status
+    }
+    
+    // --- Support Tickets (Admin Only) ---
+    // Users create tickets via a callable, admins manage them.
+    match /supportTickets/{ticketId} {
+      allow read, write: if isAdmin();
+      allow create: if isAuth();
+    }
+
+    // --- Partners ---
+    // Partners can manage their own data. Admins can read/write all partner data.
+    match /partners/{partnerId} {
+      allow read: if isAuth();
+      allow create: if isAdmin(); // Partner creation is an admin/backend process
+      allow update: if (isPartner() && getPartnerId() == partnerId) || isAdmin();
+      
+      // Partners can manage their own KYB documents. Admins can also manage.
+      match /kyb_documents/{docId} {
+         allow read, write: if (isPartner() && getPartnerId() == partnerId) || isAdmin();
+      }
+    }
+
+    // --- Platform Config (Admin Only) ---
+    // Branding and other platform-wide settings are admin-only.
+    match /platform_config/{configId} {
+      allow read: if isAuth(); // All auth users can read branding
+      allow write: if isAdmin();
+    }
+    
+    // --- Logs (Admin Only) ---
+    // Logs are write-only for the backend and read-only for admins.
+    match /logs/{logId} {
+      allow read, write: if isAdmin();
+      // Write access should be locked down to backend service accounts in production.
+      // For this app, we trust the backend function context.
+    }
+  }
+}

@@ -1,0 +1,9 @@
+<svg width="800" height="800" viewBox="0 0 800 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="800" height="800" fill="none"/>
+<circle cx="400" cy="400" r="100" stroke="hsl(var(--primary-foreground))" stroke-opacity="0.1" stroke-width="2"/>
+<circle cx="400" cy="400" r="200" stroke="hsl(var(--primary-foreground))" stroke-opacity="0.1" stroke-width="2"/>
+<circle cx="400" cy="400" r="300" stroke="hsl(var(--primary-foreground))" stroke-opacity="0.1" stroke-width="2"/>
+<circle cx="400" cy="400" r="400" stroke="hsl(var(--primary-foreground))" stroke-opacity="0.1" stroke-width="2"/>
+<path d="M0 400 L800 400" stroke="hsl(var(--primary-foreground))" stroke-opacity="0.1" stroke-width="2"/>
+<path d="M400 0 L400 800" stroke="hsl(var(--primary-foreground))" stroke-opacity="0.1" stroke-width="2"/>
+</svg>
