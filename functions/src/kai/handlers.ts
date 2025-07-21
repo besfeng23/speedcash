@@ -1,7 +1,7 @@
 
 'use server';
 
-import { CallableRequest, HttpsError } from 'firebase-functions/v2/https';
+import { HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { z } from 'zod';
 // import { askAiAssistant } from '../ai/flows/chat-assistant'; // TODO: Create AI flow
@@ -17,7 +17,7 @@ const AiAssistantInputSchema = z.object({
 });
 
 
-export async function askAuthenticatedKaiHandler(data: any, context: CallableRequest) {
+export async function askAuthenticatedKaiHandler(data: any, context: any) {
     if (!context.auth) {
         throw new HttpsError('unauthenticated', 'User must be authenticated.');
     }

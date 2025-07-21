@@ -1,12 +1,12 @@
 
-import { CallableRequest, HttpsError } from 'firebase-functions/v2/https';
+import { HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { z } from 'zod';
 import { auditLog } from '../utils/audit';
 
 const db = admin.firestore();
 
-const hasRole = (context: CallableRequest, role: 'admin' | 'superadmin') => {
+const hasRole = (context: any, role: 'admin' | 'superadmin') => {
     const userRole = context.auth?.token.role;
     if (role === 'admin') {
         return userRole === 'admin' || userRole === 'superadmin';
@@ -14,7 +14,7 @@ const hasRole = (context: CallableRequest, role: 'admin' | 'superadmin') => {
     return userRole === role;
 }
 
-const ensureIsAdmin = (context: CallableRequest) => {
+const ensureIsAdmin = (context: any) => {
     if (!context.auth || !hasRole(context, 'admin')) {
         throw new HttpsError('permission-denied', 'Admin role required.');
     }
@@ -58,7 +58,7 @@ const partnerStatusSchema = z.object({
 
 // --- Handler Implementations ---
 
-export async function adminApproveWithdrawalHandler(data: any, context: CallableRequest) {
+export async function adminApproveWithdrawalHandler(data: any, context: any) {
   const adminUid = ensureIsAdmin(context);
   const { transactionId } = approvalSchema.parse(data);
 
@@ -84,7 +84,7 @@ export async function adminApproveWithdrawalHandler(data: any, context: Callable
   return { success: true, message: 'Withdrawal approved and is being processed.' };
 }
 
-export async function adminRejectWithdrawalHandler(data: any, context: CallableRequest) {
+export async function adminRejectWithdrawalHandler(data: any, context: any) {
     const adminUid = ensureIsAdmin(context);
     const { transactionId, reason } = rejectWithdrawalSchema.parse(data);
 
@@ -116,7 +116,7 @@ export async function adminRejectWithdrawalHandler(data: any, context: CallableR
     return { success: true, message: `Withdrawal ${transactionId} has been rejected and refunded.` };
 }
 
-export async function adminSuspendUserHandler(data: any, context: CallableRequest) {
+export async function adminSuspendUserHandler(data: any, context: any) {
     const adminUid = ensureIsAdmin(context);
     const { uid, suspend } = suspensionSchema.parse(data);
     await admin.auth().updateUser(uid, { disabled: suspend });
@@ -124,7 +124,7 @@ export async function adminSuspendUserHandler(data: any, context: CallableReques
     return { success: true, message: `User ${uid} has been ${suspend ? 'suspended' : 'unsuspended'}.` };
 }
 
-export async function adminGetUsersHandler(data: any, context: CallableRequest) {
+export async function adminGetUsersHandler(data: any, context: any) {
     ensureIsAdmin(context);
     const { limit } = paginationSchema.parse(data);
     
@@ -166,7 +166,7 @@ export async function adminGetUsersHandler(data: any, context: CallableRequest) 
     return { users };
 }
 
-export async function adminGetUserHandler(data: any, context: CallableRequest) {
+export async function adminGetUserHandler(data: any, context: any) {
     ensureIsAdmin(context);
     const { uid } = userSchema.parse(data);
     
@@ -190,14 +190,14 @@ export async function adminGetUserHandler(data: any, context: CallableRequest) {
     };
 }
 
-export async function adminGetPartnersHandler(data: any, context: CallableRequest) {
+export async function adminGetPartnersHandler(data: any, context: any) {
     ensureIsAdmin(context);
     const partnersSnapshot = await db.collection('partners').orderBy('businessName').get();
     const partners = partnersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     return { partners };
 }
 
-export async function adminGetPartnerHandler(data: any, context: CallableRequest) {
+export async function adminGetPartnerHandler(data: any, context: any) {
     ensureIsAdmin(context);
     const { partnerId } = partnerSchema.parse(data);
     const partnerDocRef = db.doc(`partners/${partnerId}`);
@@ -219,7 +219,7 @@ export async function adminGetPartnerHandler(data: any, context: CallableRequest
     };
 }
 
-export async function adminGetKycQueueHandler(data: any, context: CallableRequest) {
+export async function adminGetKycQueueHandler(data: any, context: any) {
     ensureIsAdmin(context);
     const { limit } = paginationSchema.parse(data);
 
@@ -238,7 +238,7 @@ export async function adminGetKycQueueHandler(data: any, context: CallableReques
     return { submissions };
 }
 
-export async function adminGetWithdrawalQueueHandler(data: any, context: CallableRequest) {
+export async function adminGetWithdrawalQueueHandler(data: any, context: any) {
     ensureIsAdmin(context);
     const { limit } = paginationSchema.parse(data);
 
@@ -254,7 +254,7 @@ export async function adminGetWithdrawalQueueHandler(data: any, context: Callabl
     return { requests };
 }
 
-export async function adminGetDashboardStatsHandler(data: any, context: CallableRequest) {
+export async function adminGetDashboardStatsHandler(data: any, context: any) {
     ensureIsAdmin(context);
 
     const pendingKycPromise = db.collection('kyc_submissions')
@@ -290,7 +290,7 @@ export async function adminGetDashboardStatsHandler(data: any, context: Callable
     };
 }
 
-export async function adminGetActivityLogsHandler(data: any, context: CallableRequest) {
+export async function adminGetActivityLogsHandler(data: any, context: any) {
     ensureIsAdmin(context);
     const { limit } = paginationSchema.parse(data);
 
@@ -314,7 +314,7 @@ export async function adminGetActivityLogsHandler(data: any, context: CallableRe
     return { logs };
 }
 
-export async function adminUpdatePlatformSettingsHandler(data: any, context: CallableRequest) {
+export async function adminUpdatePlatformSettingsHandler(data: any, context: any) {
     const adminUid = ensureIsAdmin(context);
     const settings = platformSettingsSchema.parse(data);
 
@@ -333,7 +333,7 @@ export async function adminUpdatePlatformSettingsHandler(data: any, context: Cal
     return { success: true, message: 'Platform settings updated successfully.' };
 }
 
-export async function adminUpdatePartnerStatusHandler(data: any, context: CallableRequest) {
+export async function adminUpdatePartnerStatusHandler(data: any, context: any) {
     const adminUid = ensureIsAdmin(context);
     const { partnerId, status, reason } = partnerStatusSchema.parse(data);
 

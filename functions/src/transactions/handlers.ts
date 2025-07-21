@@ -1,5 +1,5 @@
 
-import { CallableRequest, HttpsError } from 'firebase-functions/v2/https';
+import { HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 // import { auditLog } from '../utils/audit'; // TODO: Create audit utility
 import { 
@@ -23,7 +23,7 @@ const ensureKycVerified = async (uid: string) => {
 
 // --- Handler Implementations ---
 
-export async function initiateP2PTransferHandler(data: any, context: CallableRequest) {
+export async function initiateP2PTransferHandler(data: any, context: any) {
     if (!context.auth) throw new HttpsError('unauthenticated', 'Authentication required.');
     const senderUid = context.auth.uid;
     const { recipientMobileNumber, amount, currency } = p2pTransferSchema.parse(data);
@@ -83,7 +83,7 @@ export async function initiateP2PTransferHandler(data: any, context: CallableReq
     return { success: true, receiverName };
 }
 
-export async function initiateCashInHandler(data: any, context: CallableRequest) {
+export async function initiateCashInHandler(data: any, context: any) {
     if (!context.auth) throw new HttpsError('unauthenticated', 'Authentication required.');
     const { amount, currency, method, referenceId } = cashInSchema.parse(data);
     const uid = context.auth.uid;
@@ -100,7 +100,7 @@ export async function initiateCashInHandler(data: any, context: CallableRequest)
     return { success: true, message: 'Cash-in credited successfully.', transactionId: transactionRef.id };
 }
 
-export async function initiateCashOutHandler(data: any, context: CallableRequest) {
+export async function initiateCashOutHandler(data: any, context: any) {
     if (!context.auth) throw new HttpsError('unauthenticated', 'Authentication required.');
     const uid = context.auth.uid;
     await ensureKycVerified(uid);
@@ -132,11 +132,11 @@ export async function initiateCashOutHandler(data: any, context: CallableRequest
     return { success: true, message: 'Cash-out request submitted for approval.' };
 }
 
-export async function initiateInstaPayTransferHandler(data: any, context: CallableRequest) {
+export async function initiateInstaPayTransferHandler(data: any, context: any) {
     return initiateCashOutHandler(data, context);
 }
 
-export async function initiatePesoNetTransferHandler(data: any, context: CallableRequest) {
+export async function initiatePesoNetTransferHandler(data: any, context: any) {
     return initiateCashOutHandler(data, context);
 }
 
@@ -144,7 +144,7 @@ function getExchangeRatePHPtoKRW(): number {
   return 45.50; // mock value: 1 PHP = 45.50 KRW
 }
 
-export async function initiateRemittanceHandler(data: any, context: CallableRequest) {
+export async function initiateRemittanceHandler(data: any, context: any) {
     const uid = context.auth?.uid;
     if (!uid) throw new HttpsError("unauthenticated", "User not authenticated.");
     await ensureKycVerified(uid);
@@ -193,7 +193,7 @@ export async function initiateRemittanceHandler(data: any, context: CallableRequ
     return { success: true, message: 'Remittance request submitted successfully.' };
 }
 
-export async function initiateBuyLoadHandler(data: any, context: CallableRequest) {
+export async function initiateBuyLoadHandler(data: any, context: any) {
     if (!context.auth) throw new HttpsError('unauthenticated', 'Authentication required.');
     const uid = context.auth.uid;
     const { mobileNumber, amount } = buyLoadSchema.parse(data);
@@ -218,7 +218,7 @@ export async function initiateBuyLoadHandler(data: any, context: CallableRequest
     return { success: true };
 }
 
-export async function initiateBillPaymentHandler(data: any, context: CallableRequest) {
+export async function initiateBillPaymentHandler(data: any, context: any) {
     if (!context.auth) throw new HttpsError('unauthenticated', 'Authentication required.');
     const uid = context.auth.uid;
     const { billerName, accountNumber, amount } = billPaymentSchema.parse(data);

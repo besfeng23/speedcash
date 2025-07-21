@@ -1,5 +1,5 @@
 
-import { CallableRequest, HttpsError } from 'firebase-functions/v2/https';
+import { HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { z } from 'zod';
 import { auditLog } from '../utils/audit';
@@ -39,7 +39,7 @@ const kybDocSchema = z.object({
 });
 
 // --- Authorization Helper ---
-const ensureIsPartner = (context: CallableRequest): string => {
+const ensureIsPartner = (context: any): string => {
     if (!context.auth || context.auth.token.role !== 'partner' || !context.auth.token.partnerId) {
         throw new HttpsError('permission-denied', 'Only authenticated partners can perform this action.');
     }
@@ -49,7 +49,7 @@ const ensureIsPartner = (context: CallableRequest): string => {
 
 // --- Handler Implementations ---
 
-export async function createPartnerHandler(data: any, context: CallableRequest) {
+export async function createPartnerHandler(data: any, context: any) {
   const { uid, businessName, email, mobileNumber } = createPartnerSchema.parse(data);
 
   // Set custom claims for the new partner user
@@ -97,7 +97,7 @@ export async function createPartnerHandler(data: any, context: CallableRequest) 
 }
 
 
-export async function partnerGetDashboardStatsHandler(data: any, context: CallableRequest) {
+export async function partnerGetDashboardStatsHandler(data: any, context: any) {
   if (!context.auth) throw new HttpsError('unauthenticated', 'User must be authenticated.');
 
   const partnerUid = context.auth.uid;
@@ -149,7 +149,7 @@ export async function partnerGetDashboardStatsHandler(data: any, context: Callab
   return { availableBalance, volume24h, dailyVolumeLast7Days };
 }
 
-export async function partnerGetTeamMembersHandler(data: any, context: CallableRequest) {
+export async function partnerGetTeamMembersHandler(data: any, context: any) {
     const partnerId = ensureIsPartner(context);
     const teamMembersSnapshot = await db.collection('users').where('partnerId', '==', partnerId).get();
 
@@ -183,7 +183,7 @@ export async function partnerGetTeamMembersHandler(data: any, context: CallableR
     return { teamMembers };
 }
 
-export async function partnerInviteMemberHandler(data: any, context: CallableRequest) {
+export async function partnerInviteMemberHandler(data: any, context: any) {
     const partnerId = ensureIsPartner(context);
     const { email, name, role } = inviteMemberSchema.parse(data);
 
@@ -226,7 +226,7 @@ export async function partnerInviteMemberHandler(data: any, context: CallableReq
     }
 }
 
-export async function partnerRemoveMemberHandler(data: any, context: CallableRequest) {
+export async function partnerRemoveMemberHandler(data: any, context: any) {
     const partnerId = ensureIsPartner(context);
     const { userId } = removeMemberSchema.parse(data);
 
@@ -251,7 +251,7 @@ export async function partnerRemoveMemberHandler(data: any, context: CallableReq
 }
 
 
-export async function partnerInitiateTestPayoutHandler(data: any, context: CallableRequest) {
+export async function partnerInitiateTestPayoutHandler(data: any, context: any) {
     const adminUid = context.auth?.uid;
     if (context.auth?.token.role !== 'admin' && context.auth?.token.role !== 'superadmin') {
         throw new HttpsError('permission-denied', 'Admin role required.');
@@ -281,7 +281,7 @@ export async function partnerInitiateTestPayoutHandler(data: any, context: Calla
     }
 }
 
-export async function partnerSubmitKybDocumentHandler(data: any, context: CallableRequest) {
+export async function partnerSubmitKybDocumentHandler(data: any, context: any) {
     const partnerId = ensureIsPartner(context);
     const { docId, docType, url } = kybDocSchema.parse(data);
 

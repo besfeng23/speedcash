@@ -1,5 +1,5 @@
 
-import { CallableRequest, HttpsError } from 'firebase-functions/v2/https';
+import { HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { z } from 'zod';
 
@@ -15,7 +15,7 @@ const getProfileSchema = z.object({
 
 
 // --- Handlers ---
-export async function getWalletBalanceHandler(data: any, context: CallableRequest) {
+export async function getWalletBalanceHandler(data: any, context: any) {
   if (!context.auth) throw new HttpsError('unauthenticated', 'Authentication required.');
   
   const { uid } = getBalanceSchema.parse(data);
@@ -38,7 +38,7 @@ export async function getWalletBalanceHandler(data: any, context: CallableReques
 }
 
 
-export async function getUserProfileHandler(data: any, context: CallableRequest) {
+export async function getUserProfileHandler(data: any, context: any) {
   if (!context.auth) throw new HttpsError('unauthenticated', 'Authentication required.');
   
   const { uid } = getProfileSchema.parse(data);

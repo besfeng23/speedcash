@@ -1,5 +1,5 @@
 
-import { CallableRequest, HttpsError } from 'firebase-functions/v2/https';
+import { HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { z } from 'zod';
 import { auditLog } from '../utils/audit';
@@ -26,7 +26,7 @@ const docUrlSchema = z.object({
 
 // --- Handler Implementations ---
 
-export async function submitKycHandler(data: any, context: CallableRequest) {
+export async function submitKycHandler(data: any, context: any) {
   if (!context.auth) throw new HttpsError('unauthenticated', 'Authentication required.');
   const uid = context.auth.uid;
   const parsedData = kycSubmissionSchema.parse(data);
@@ -53,7 +53,7 @@ export async function submitKycHandler(data: any, context: CallableRequest) {
   return { success: true, message: 'KYC submission received and is pending review.' };
 }
 
-export async function adminUpdateKycStatusHandler(data: any, context: CallableRequest) {
+export async function adminUpdateKycStatusHandler(data: any, context: any) {
   const adminUid = context.auth?.uid;
   if (context.auth?.token.role !== 'admin' && context.auth?.token.role !== 'superadmin') {
     throw new HttpsError('permission-denied', 'Admin role required.');
@@ -83,7 +83,7 @@ export async function adminUpdateKycStatusHandler(data: any, context: CallableRe
   return { success: true, message: `KYC status for ${uid} updated to ${status}.` };
 }
 
-export async function addKycDocumentHandler(data: any, context: CallableRequest) {
+export async function addKycDocumentHandler(data: any, context: any) {
     if (context.auth?.token.role !== 'admin' && context.auth?.token.role !== 'superadmin') {
         throw new HttpsError('permission-denied', 'Admin role required.');
     }
@@ -95,7 +95,7 @@ export async function addKycDocumentHandler(data: any, context: CallableRequest)
     return { success: true };
 }
 
-export async function adminDeleteKycDocumentHandler(data: any, context: CallableRequest) {
+export async function adminDeleteKycDocumentHandler(data: any, context: any) {
     if (context.auth?.token.role !== 'admin' && context.auth?.token.role !== 'superadmin') {
         throw new HttpsError('permission-denied', 'Admin role required.');
     }

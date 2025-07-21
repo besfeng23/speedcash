@@ -1,5 +1,5 @@
 
-import { CallableRequest, HttpsError } from 'firebase-functions/v2/https';
+import { HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { z } from 'zod';
 
@@ -11,7 +11,7 @@ const getHistorySchema = z.object({
     limit: z.number().int().positive().optional().default(50),
 });
 
-export async function getTransactionHistoryHandler(data: any, context: CallableRequest) {
+export async function getTransactionHistoryHandler(data: any, context: any) {
   if (!context.auth) throw new HttpsError('unauthenticated', 'Authentication required.');
 
   // An admin can request any user's history, but a user can only request their own.
