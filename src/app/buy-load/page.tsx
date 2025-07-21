@@ -9,19 +9,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useApi } from "@/hooks/useApi";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 
 const loadDenominations = [
     { type: 'Regular', amount: 50, data: 0 },
@@ -160,11 +151,12 @@ export default function BuyLoadPage() {
                                         <Button variant="outline" className="w-full" onClick={handleBack} disabled={isLoading}>
                                             Back
                                         </Button>
-                                        {/* TODO: Import AlertDialogTrigger component */}
-                                        <Button className="w-full" disabled={isLoading}>
-                                            <Check className="mr-2"/>
-                                            Confirm & Pay
-                                        </Button>
+                                        <AlertDialogTrigger asChild>
+                                            <Button className="w-full" disabled={isLoading}>
+                                                <Check className="mr-2"/>
+                                                Confirm & Pay
+                                            </Button>
+                                        </AlertDialogTrigger>
                                     </div>
                                     <AlertDialogContent>
                                         <AlertDialogHeader>

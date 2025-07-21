@@ -22,6 +22,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import debounce from 'lodash.debounce';
 
@@ -143,12 +144,12 @@ function SendMoneyContent() {
                     </div>
                     
                     <AlertDialog>
-                        <Button asChild>
+                        <AlertDialogTrigger asChild>
                             <Button className="w-full" size="lg" disabled={!recipient || !amount || isLoading}>
                                 <Wallet className="mr-2 h-5 w-5" />
                                 Send Payment
                             </Button>
-                        </Button>
+                        </AlertDialogTrigger>
                         <AlertDialogContent>
                             <AlertDialogHeader>
                                 <AlertDialogTitle>Confirm Transfer</AlertDialogTitle>
