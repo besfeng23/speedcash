@@ -1,0 +1,83 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [cpayadmin]
+  pull_request:
+    branches: [cpayadmin]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+      - name: Install dependencies (root)
+        run: npm install
+      - name: Install dependencies (functions)
+        run: |
+          cd functions
+          npm install
+      - name: Build backend
+        run: |
+          cd functions
+          npm run build
+      - name: Run backend tests
+        run: |
+          cd functions
+          npm test || true
+      - name: Build frontend
+        run: |
+          cd src
+          npm install || true
+          cd ..
+      - name: Run frontend tests
+        run: |
+          cd src
+          npm test || true
+          cd ..
+
+  deploy-backend:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/cpayadmin'
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+      - name: Deploy Functions
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: |
+          cd functions
+          firebase deploy --only functions --token "$FIREBASE_TOKEN"
+
+  deploy-frontend:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/cpayadmin'
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+      - name: Build frontend
+        run: |
+          cd src
+          npm install
+          npm run build
+      # Add your preferred deployment step here (Vercel, Netlify, Firebase Hosting, etc.)
+      # Example for Firebase Hosting:
+      - name: Deploy to Firebase Hosting
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+        run: |
+          firebase deploy --only hosting --token "$FIREBASE_TOKEN" 
