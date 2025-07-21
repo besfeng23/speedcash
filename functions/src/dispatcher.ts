@@ -1,8 +1,6 @@
 
 'use server';
 
-import * as functions from 'firebase-functions';
-import cors from 'cors';
 import { z } from 'zod';
 import * as adminHandlers from './admin/handlers';
 import * as kycHandlers from './kyc/handlers';
@@ -12,8 +10,6 @@ import * as transactionQueryHandlers from './transactions/queries';
 import * as kaiHandlers from './kai/handlers';
 import * as partnerHandlers from './partners/handlers';
 import { onRequest } from 'firebase-functions/v2/https';
-
-const corsHandler = cors({ origin: true });
 
 const dispatcherSchema = z.object({
   action: z.string(),
