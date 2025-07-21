@@ -7,15 +7,9 @@
 
 import { ai } from '../genkit';
 import { z } from 'zod';
-import { generateImage } from '../flows/image-generation';
 
-const GenerateImageInputSchema = z.object({
-  prompt: z.string().describe("A detailed text description of the image to generate."),
-});
 
-const GenerateImageOutputSchema = z.object({
-  imageUrl: z.string().describe("The data URI of the generated image."),
-});
+
 
 export const generateImageTool = ai.defineTool(
   {

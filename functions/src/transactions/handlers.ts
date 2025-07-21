@@ -1,5 +1,5 @@
 
-import { onCall, CallableRequest, HttpsError } from 'firebase-functions/v2/https';
+import { CallableRequest, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 // import { auditLog } from '../utils/audit'; // TODO: Create audit utility
 import { 

@@ -1,8 +1,7 @@
 
 'use server';
 
-import { onCall, CallableRequest, HttpsError } from 'firebase-functions/v2/https';
-import * as admin from 'firebase-admin';
+import { onCall, HttpsError } from 'firebase-functions/v2/https';
 import { z } from 'zod';
 
 // Import handlers from other files

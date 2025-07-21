@@ -1,6 +1,6 @@
 
 import { getFirestore } from 'firebase-admin/firestore';
-import * as admin from 'firebase-admin';
+
 
 const db = getFirestore();
 

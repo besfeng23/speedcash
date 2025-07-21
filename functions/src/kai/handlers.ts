@@ -28,14 +28,12 @@ export async function askAuthenticatedKaiHandler(data: any, context: CallableReq
     const userDocRef = db.doc(`users/${uid}`);
     const phpWalletRef = db.doc(`users/${uid}/wallets/PHP`);
 
-    const [userDoc, phpWalletDoc] = await Promise.all([
+    await Promise.all([
         userDocRef.get(),
         phpWalletRef.get()
     ]);
     
-    const kycStatus = userDoc.exists ? userDoc.data()?.kycStatus : undefined;
-    const phpBalance = phpWalletDoc.exists ? phpWalletDoc.data()?.balance : undefined;
-    const userRole = context.auth.token.role || 'user';
+
 
     // TODO: Implement AI assistant flow
     // const aiResult = await askAiAssistant({ 
