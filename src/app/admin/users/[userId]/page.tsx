@@ -1,10 +1,7 @@
-
 "use client";
 import { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
-
-
 
 export default function UserDetailPage() {
   const router = useRouter();

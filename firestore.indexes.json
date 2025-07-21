@@ -1,27 +1,8 @@
 
 {
   "indexes": [
-    {
-      "collectionGroup": "users",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "users",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "partnerId", "order": "ASCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "partners",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "businessName", "order": "ASCENDING" }
-      ]
-    },
+
+
     {
       "collectionGroup": "transactions",
       "queryScope": "COLLECTION",
