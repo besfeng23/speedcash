@@ -28,7 +28,7 @@ jobs:
       - name: Run backend tests
         run: |
           cd functions
-          npm test || true
+          npm test
       - name: Build frontend
         run: |
           cd src
