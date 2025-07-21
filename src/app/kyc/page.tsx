@@ -48,12 +48,23 @@ export default function KycPage() {
         if (e.target.files && e.target.files[0] && user) {
             const file = e.target.files[0];
             setIsUploading(true);
+            let timeoutId: NodeJS.Timeout | null = null;
             try {
-                const storageRef = ref(storage, `kyc-documents/${user.uid}/${file.name}`);
-                await uploadBytes(storageRef, file);
-                const downloadURL = await getDownloadURL(storageRef);
-                setDocumentUrl(downloadURL);
+                // Add a 30s timeout to prevent infinite loading
+                const uploadPromise = (async () => {
+                    const storageRef = ref(storage, `kyc-documents/${user.uid}/${file.name}`);
+                    await uploadBytes(storageRef, file);
+                    const downloadURL = await getDownloadURL(storageRef);
+                    setDocumentUrl(downloadURL);
+                })();
+                timeoutId = setTimeout(() => {
+                    setIsUploading(false);
+                    form.setError("root", { message: "Upload timed out. Please try again or check your connection." });
+                }, 30000);
+                await uploadPromise;
+                if (timeoutId) clearTimeout(timeoutId);
             } catch (error) {
+                if (timeoutId) clearTimeout(timeoutId);
                 console.error("Upload failed", error);
                 form.setError("root", { message: "File upload failed. Please try again." });
             } finally {
