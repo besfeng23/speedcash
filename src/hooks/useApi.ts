@@ -8,7 +8,7 @@ import { app } from '@/lib/firebase';
 import { useAuth } from './useAuth';
 
 // Replace with your actual Cloud Run URL for cpayDispatcher
-const CLOUD_RUN_DISPATCHER_URL = 'https://cpaydispatcher-n4f73lnkeq-uc.a.run.app';
+const CLOUD_RUN_DISPATCHER_URL = process.env.NEXT_PUBLIC_DISPATCHER_URL || 'https://cpaydispatcher-n4f73lnkeq-uc.a.run.app';
 
 // This type helps us define that the payload will be wrapped with an idToken.
 type DispatcherPayload<T> = {
