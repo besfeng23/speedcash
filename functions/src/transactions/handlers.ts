@@ -1,7 +1,7 @@
 
 import { HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
-// import { auditLog } from '../utils/audit'; // TODO: Create audit utility
+import { auditLog } from '../utils/audit';
 import { 
   p2pTransferSchema, 
   cashInSchema, 
@@ -80,6 +80,15 @@ export async function initiateP2PTransferHandler(data: any, context: any) {
         });
     });
 
+    // Audit log the transaction
+    await auditLog({ uid: senderUid }, 'P2P_TRANSFER_SUCCESS', {
+        transactionId: txnRef.id,
+        amount,
+        currency,
+        recipientUid: receiverUid,
+        recipientName: receiverName
+    });
+
     return { success: true, receiverName };
 }
 
@@ -128,7 +137,7 @@ export async function initiateCashOutHandler(data: any, context: any) {
         });
     });
 
-    // await auditLog({ uid }, 'CASHOUT_REQUEST', { transactionId: transactionRef.id, amount, bank: bankDetails.bankCode });
+    await auditLog({ uid }, 'CASHOUT_REQUEST', { transactionId: transactionRef.id, amount, bank: bankDetails.bankCode });
     return { success: true, message: 'Cash-out request submitted for approval.' };
 }
 
@@ -185,9 +194,9 @@ export async function initiateRemittanceHandler(data: any, context: any) {
         timestamp: now, userIds: [uid],
       });
 
-      // await auditLog({ uid }, 'TRANSACTION_REQUEST' as any, {
-      //   transactionId: remitLogRef.id, amount: amountPHP, recipientBank: recipientDetails.recipientBankName,
-      // });
+      await auditLog({ uid }, 'TRANSACTION_REQUEST' as any, {
+        transactionId: remitLogRef.id, amount: amountPHP, recipientBank: recipientDetails.recipientBankName,
+      });
     });
 
     return { success: true, message: 'Remittance request submitted successfully.' };

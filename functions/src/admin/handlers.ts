@@ -338,23 +338,141 @@ export async function adminUpdatePartnerStatusHandler(data: any, context: any) {
     const { partnerId, status, reason } = partnerStatusSchema.parse(data);
 
     const partnerRef = db.doc(`partners/${partnerId}`);
+    const partnerDoc = await partnerRef.get();
     
-    const updatePayload: Record<string, any> = {
-      kybStatus: status,
-      status: status === 'VERIFIED' ? 'Active' : 'Action Required',
-      [`statusUpdate_by`]: adminUid,
-      [`statusUpdate_at`]: admin.firestore.FieldValue.serverTimestamp(),
-      [`statusUpdate_reason`]: reason || null,
+    if (!partnerDoc.exists) {
+        throw new HttpsError('not-found', 'Partner not found.');
+    }
+
+    await partnerRef.update({ 
+        status, 
+        statusReason: reason,
+        statusUpdatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        statusUpdatedBy: adminUid
+    });
+
+    await auditLog({ uid: adminUid }, 'ADMIN_ACTION', { action: 'UPDATE_PARTNER_STATUS', partnerId, status, reason });
+    return { success: true, message: 'Partner status updated successfully.' };
+}
+
+// --- Missing Admin Handlers ---
+
+export async function adminGetTransactionsHandler(data: any, context: any) {
+    const adminUid = ensureIsAdmin(context);
+    const { limit = 50, offset = 0, status, type } = paginationSchema.extend({
+        status: z.string().optional(),
+        type: z.string().optional()
+    }).parse(data);
+
+    let query = db.collection('transactions').orderBy('timestamp', 'desc');
+    
+    if (status) {
+        query = query.where('status', '==', status);
+    }
+    
+    if (type) {
+        query = query.where('type', '==', type);
+    }
+
+    const snapshot = await query.limit(limit).offset(offset).get();
+    const transactions = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+    }));
+
+    await auditLog({ uid: adminUid }, 'ADMIN_ACTION', { action: 'GET_TRANSACTIONS', limit, offset });
+    return { transactions };
+}
+
+export async function adminGetTicketsHandler(data: any, context: any) {
+    const adminUid = ensureIsAdmin(context);
+    const { limit = 50, offset = 0, status } = paginationSchema.extend({
+        status: z.string().optional()
+    }).parse(data);
+
+    let query = db.collection('support_tickets').orderBy('createdAt', 'desc');
+    
+    if (status && status !== 'ALL') {
+        query = query.where('status', '==', status);
+    }
+
+    const snapshot = await query.limit(limit).offset(offset).get();
+    const tickets = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+    }));
+
+    await auditLog({ uid: adminUid }, 'ADMIN_ACTION', { action: 'GET_TICKETS', limit, offset, status });
+    return { tickets };
+}
+
+export async function adminUpdateSupportTicketHandler(data: any, context: any) {
+    const adminUid = ensureIsAdmin(context);
+    const { ticketId, status, resolutionNotes } = z.object({
+        ticketId: z.string(),
+        status: z.enum(['NEW', 'IN_PROGRESS', 'RESOLVED', 'CLOSED']).optional(),
+        resolutionNotes: z.string().optional()
+    }).parse(data);
+
+    const ticketRef = db.doc(`support_tickets/${ticketId}`);
+    const ticketDoc = await ticketRef.get();
+    
+    if (!ticketDoc.exists) {
+        throw new HttpsError('not-found', 'Support ticket not found.');
+    }
+
+    const updateData: any = {
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        updatedBy: adminUid
     };
-    
-    await partnerRef.update(updatePayload);
+
+    if (status) {
+        updateData.status = status;
+    }
+
+    if (resolutionNotes !== undefined) {
+        updateData.resolutionNotes = resolutionNotes;
+    }
+
+    await ticketRef.update(updateData);
 
     await auditLog({ uid: adminUid }, 'ADMIN_ACTION', { 
-        action: 'UPDATE_PARTNER_STATUS', 
-        targetPartnerId: partnerId, 
-        newStatus: status,
-        reason: reason
+        action: 'UPDATE_SUPPORT_TICKET', 
+        ticketId, 
+        status, 
+        hasResolutionNotes: !!resolutionNotes 
     });
     
-    return { success: true, message: `Partner ${partnerId} status updated to ${status}.` };
+    return { success: true, message: 'Support ticket updated successfully.' };
+}
+
+export async function adminGetUserTransactionsHandler(data: any, context: any) {
+    const adminUid = ensureIsAdmin(context);
+    const { uid, limit = 50, offset = 0 } = userSchema.extend({
+        limit: z.number().int().positive().optional().default(50),
+        offset: z.number().int().nonnegative().optional().default(0)
+    }).parse(data);
+
+    // Verify user exists
+    const userRef = db.doc(`users/${uid}`);
+    const userDoc = await userRef.get();
+    
+    if (!userDoc.exists) {
+        throw new HttpsError('not-found', 'User not found.');
+    }
+
+    const query = db.collection('transactions')
+        .where('senderInfo.uid', '==', uid)
+        .orderBy('timestamp', 'desc')
+        .limit(limit)
+        .offset(offset);
+
+    const snapshot = await query.get();
+    const transactions = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+    }));
+
+    await auditLog({ uid: adminUid }, 'ADMIN_ACTION', { action: 'GET_USER_TRANSACTIONS', targetUid: uid, limit, offset });
+    return { transactions };
 }

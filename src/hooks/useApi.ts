@@ -8,7 +8,13 @@ import { app } from '@/lib/firebase';
 import { useAuth } from './useAuth';
 
 // Replace with your actual Cloud Run URL for cpayDispatcher
-const CLOUD_RUN_DISPATCHER_URL = process.env.NEXT_PUBLIC_DISPATCHER_URL || 'https://cpaydispatcher-n4f73lnkeq-uc.a.run.app';
+// Updated to use the correct region where cpayDispatcher is deployed
+const CLOUD_RUN_DISPATCHER_URL = process.env.NEXT_PUBLIC_DISPATCHER_URL || 'https://asia-southeast1-applez-dch9v.cloudfunctions.net/cpayDispatcher';
+
+// Temporary CORS proxy for development (remove in production)
+const CORS_PROXY = process.env.NODE_ENV === 'development' 
+  ? 'https://cors-anywhere.herokuapp.com/'
+  : '';
 
 // This type helps us define that the payload will be wrapped with an idToken.
 type DispatcherPayload<T> = {
@@ -26,8 +32,10 @@ async function callDispatcher<TRequest, TResponse>(
   if (!idToken) {
     throw new Error('Authentication token is missing. Please log in.');
   }
+  
   try {
-    const response = await fetch(CLOUD_RUN_DISPATCHER_URL, {
+    // Try direct request first
+    let response = await fetch(CLOUD_RUN_DISPATCHER_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -35,6 +43,21 @@ async function callDispatcher<TRequest, TResponse>(
       },
       body: JSON.stringify({ action, payload })
     });
+    
+    // If CORS error, try with proxy (development only)
+    if (!response.ok && response.status === 0 && CORS_PROXY && process.env.NODE_ENV === 'development') {
+      console.warn('CORS error detected, trying with proxy...');
+      response = await fetch(CORS_PROXY + CLOUD_RUN_DISPATCHER_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${idToken}`,
+          'Origin': window.location.origin
+        },
+        body: JSON.stringify({ action, payload })
+      });
+    }
+    
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.error || response.statusText);
@@ -73,7 +96,8 @@ export function useApi<TResponse = unknown, TRequest = unknown>(actionName: stri
 
 export async function apiCall<TResponse = unknown>(action: string, payload?: unknown, idToken?: string | null): Promise<TResponse> {
   try {
-    const response = await fetch(CLOUD_RUN_DISPATCHER_URL, {
+    // Try direct request first
+    let response = await fetch(CLOUD_RUN_DISPATCHER_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -81,6 +105,21 @@ export async function apiCall<TResponse = unknown>(action: string, payload?: unk
       },
       body: JSON.stringify({ action, payload })
     });
+    
+    // If CORS error, try with proxy (development only)
+    if (!response.ok && response.status === 0 && CORS_PROXY && process.env.NODE_ENV === 'development') {
+      console.warn('CORS error detected, trying with proxy...');
+      response = await fetch(CORS_PROXY + CLOUD_RUN_DISPATCHER_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(idToken ? { 'Authorization': `Bearer ${idToken}` } : {}),
+          'Origin': window.location.origin
+        },
+        body: JSON.stringify({ action, payload })
+      });
+    }
+    
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(errorData.error || response.statusText);

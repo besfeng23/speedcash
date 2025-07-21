@@ -1,258 +1,300 @@
-import { monitoring, recordTransaction, recordApiCall, recordError, checkAlerts } from '../monitoring';
+import { monitoring } from '../monitoring';
 
-describe('Monitoring', () => {
+// Mock Firebase Admin initialization
+jest.mock('firebase-admin', () => ({
+  initializeApp: jest.fn(),
+  firestore: jest.fn(() => ({
+    collection: jest.fn(() => ({
+      add: jest.fn().mockResolvedValue({ id: 'test-id' }),
+      orderBy: jest.fn(() => ({
+        limit: jest.fn(() => ({
+          get: jest.fn().mockResolvedValue({ docs: [] })
+        }))
+      })),
+      where: jest.fn(() => ({
+        orderBy: jest.fn(() => ({
+          limit: jest.fn(() => ({
+            get: jest.fn().mockResolvedValue({ docs: [] })
+          }))
+        }))
+      }))
+    }))
+  })),
+  FieldValue: {
+    serverTimestamp: jest.fn(() => ({ _methodName: 'serverTimestamp' }))
+  }
+}));
+
+describe('Monitoring Service', () => {
   beforeEach(() => {
-    // Reset monitoring state for each test
-    (monitoring as any).metrics = [];
-    (monitoring as any).alerts = [];
-    (monitoring as any).lastAlertTime = {};
+    // Clear any existing logs before each test
+    jest.clearAllMocks();
   });
 
-  describe('Metric Recording', () => {
-    it('should record transaction metrics', () => {
-      recordTransaction('p2p_transfer', 1500, true, 'user123');
+  describe('log', () => {
+    it('should log entries to Firestore', async () => {
+      const mockAdd = jest.fn().mockResolvedValue({ id: 'test-id' });
+      const mockCollection = jest.fn().mockReturnValue({ add: mockAdd });
+      const mockFirestore = jest.fn().mockReturnValue({ collection: mockCollection });
       
-      const metrics = monitoring.getMetrics('transaction_duration');
-      expect(metrics).toHaveLength(1);
-      expect(metrics[0].value).toBe(1500);
-      expect(metrics[0].tags.operation).toBe('p2p_transfer');
-      expect(metrics[0].tags.success).toBe('true');
-      expect(metrics[0].tags.userId).toBe('user123');
+      // Mock the Firestore instance
+      jest.doMock('firebase-admin', () => ({
+        firestore: mockFirestore
+      }));
+
+      const testEntry = {
+        timestamp: new Date().toISOString(),
+        level: 'info' as const,
+        message: 'Test log entry',
+        data: { test: 'data' }
+      };
+
+      await monitoring.log(testEntry);
+
+      expect(mockCollection).toHaveBeenCalledWith('system_logs');
+      expect(mockAdd).toHaveBeenCalledWith(expect.objectContaining({
+        ...testEntry,
+        timestamp: expect.any(Object) // FieldValue.serverTimestamp()
+      }));
     });
 
-    it('should record API call metrics', () => {
-      recordApiCall('POST', '/api/transactions', 200, 800, 'user123');
+    it('should fallback to console logging on Firestore error', async () => {
+      const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+      const mockAdd = jest.fn().mockRejectedValue(new Error('Firestore error'));
+      const mockCollection = jest.fn().mockReturnValue({ add: mockAdd });
+      const mockFirestore = jest.fn().mockReturnValue({ collection: mockCollection });
       
-      const metrics = monitoring.getMetrics('api_duration');
-      expect(metrics).toHaveLength(1);
-      expect(metrics[0].value).toBe(800);
-      expect(metrics[0].tags.method).toBe('POST');
-      expect(metrics[0].tags.path).toBe('/api/transactions');
-      expect(metrics[0].tags.statusCode).toBe('200');
-    });
+      jest.doMock('firebase-admin', () => ({
+        firestore: mockFirestore
+      }));
 
-    it('should record error metrics', () => {
-      const error = new Error('Database connection failed');
-      recordError(error, 'database_operation', 'user123');
-      
-      const metrics = monitoring.getMetrics('error_count');
-      expect(metrics).toHaveLength(1);
-      expect(metrics[0].value).toBe(1);
-      expect(metrics[0].tags.error_type).toBe('Error');
-      expect(metrics[0].tags.context).toBe('database_operation');
-    });
+      const testEntry = {
+        timestamp: new Date().toISOString(),
+        level: 'info' as const,
+        message: 'Test log entry'
+      };
 
-    it('should record multiple metrics for a single transaction', () => {
-      recordTransaction('p2p_transfer', 1500, true, 'user123');
-      
-      const durationMetrics = monitoring.getMetrics('transaction_duration');
-      const countMetrics = monitoring.getMetrics('transaction_count');
-      const errorMetrics = monitoring.getMetrics('transaction_error_count');
-      
-      expect(durationMetrics).toHaveLength(1);
-      expect(countMetrics).toHaveLength(1);
-      expect(errorMetrics).toHaveLength(0); // No error for successful transaction
-    });
+      await monitoring.log(testEntry);
 
-    it('should record error metrics for failed transactions', () => {
-      recordTransaction('p2p_transfer', 1500, false, 'user123');
-      
-      const errorMetrics = monitoring.getMetrics('transaction_error_count');
-      expect(errorMetrics).toHaveLength(1);
-      expect(errorMetrics[0].value).toBe(1);
+      expect(consoleSpy).toHaveBeenCalledWith('[INFO] Test log entry', '');
+      consoleSpy.mockRestore();
     });
   });
 
-  describe('Metric Filtering', () => {
-    beforeEach(() => {
-      // Add some test metrics
-      recordTransaction('p2p_transfer', 1000, true, 'user123');
-      recordTransaction('cash_in', 2000, true, 'user456');
-      recordApiCall('POST', '/api/transactions', 200, 500, 'user123');
-      recordApiCall('GET', '/api/balance', 200, 300, 'user456');
-    });
+  describe('logCorsRequest', () => {
+    it('should log CORS request details', async () => {
+      const mockLog = jest.spyOn(monitoring, 'log').mockResolvedValue();
+      
+      const mockReq = {
+        method: 'OPTIONS',
+        url: '/test',
+        headers: {
+          origin: 'https://test.com',
+          'user-agent': 'test-agent'
+        },
+        ip: '127.0.0.1'
+      };
 
-    it('should filter metrics by name', () => {
-      const transactionMetrics = monitoring.getMetrics('transaction_duration');
-      const apiMetrics = monitoring.getMetrics('api_duration');
-      
-      expect(transactionMetrics).toHaveLength(2);
-      expect(apiMetrics).toHaveLength(2);
-    });
+      const mockRes = {};
 
-    it('should filter metrics by time range', () => {
-      const now = new Date();
-      const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
-      const tenMinutesAgo = new Date(now.getTime() - 10 * 60 * 1000);
-      
-      // Add an old metric
-      (monitoring as any).metrics.push({
-        name: 'transaction_duration',
-        value: 5000,
-        timestamp: tenMinutesAgo,
-        tags: { operation: 'old_transaction' }
-      });
-      
-      const recentMetrics = monitoring.getMetrics('transaction_duration', {
-        start: fiveMinutesAgo,
-        end: now
-      });
-      
-      expect(recentMetrics).toHaveLength(2); // Only the recent ones
+      await monitoring.logCorsRequest(mockReq, mockRes, true);
+
+      expect(mockLog).toHaveBeenCalledWith(expect.objectContaining({
+        level: 'info',
+        message: 'CORS success',
+        data: {
+          method: 'OPTIONS',
+          url: '/test',
+          success: true
+        },
+        origin: 'https://test.com',
+        userAgent: 'test-agent',
+        ip: '127.0.0.1'
+      }));
+
+      mockLog.mockRestore();
     });
   });
 
-  describe('Statistics Calculation', () => {
-    beforeEach(() => {
-      recordTransaction('p2p_transfer', 1000, true, 'user123');
-      recordTransaction('p2p_transfer', 2000, true, 'user456');
-      recordTransaction('p2p_transfer', 1500, true, 'user789');
+  describe('logApiCall', () => {
+    it('should log successful API calls', async () => {
+      const mockLog = jest.spyOn(monitoring, 'log').mockResolvedValue();
+      
+      const mockReq = {
+        method: 'POST',
+        headers: {
+          origin: 'https://test.com',
+          'user-agent': 'test-agent'
+        },
+        ip: '127.0.0.1'
+      };
+
+      await monitoring.logApiCall(mockReq, 'testAction', true);
+
+      expect(mockLog).toHaveBeenCalledWith(expect.objectContaining({
+        level: 'info',
+        message: 'API call successful: testAction',
+        data: {
+          action: 'testAction',
+          method: 'POST',
+          success: true
+        }
+      }));
+
+      mockLog.mockRestore();
     });
 
-    it('should calculate correct statistics', () => {
-      const stats = monitoring.getMetricStats('transaction_duration');
+    it('should log failed API calls with error details', async () => {
+      const mockLog = jest.spyOn(monitoring, 'log').mockResolvedValue();
       
-      expect(stats.count).toBe(3);
-      expect(stats.sum).toBe(4500);
-      expect(stats.average).toBe(1500);
-      expect(stats.min).toBe(1000);
-      expect(stats.max).toBe(2000);
-    });
+      const mockReq = {
+        method: 'POST',
+        headers: {
+          origin: 'https://test.com',
+          'user-agent': 'test-agent'
+        },
+        ip: '127.0.0.1'
+      };
 
-    it('should handle empty metrics', () => {
-      const stats = monitoring.getMetricStats('nonexistent_metric');
-      
-      expect(stats.count).toBe(0);
-      expect(stats.sum).toBe(0);
-      expect(stats.average).toBe(0);
-      expect(stats.min).toBe(0);
-      expect(stats.max).toBe(0);
-    });
-  });
+      const testError = new Error('Test error');
 
-  describe('Alert Management', () => {
-    it('should create alerts when conditions are met', () => {
-      // Add a custom alert rule
-      monitoring.addAlertRule({
-        id: 'test_alert',
-        name: 'Test Alert',
-        condition: (metrics) => metrics.length > 0,
-        severity: 'HIGH',
-        message: 'Test alert triggered',
-        cooldownMinutes: 1
-      });
-      
-      // Add a metric to trigger the alert
-      recordTransaction('p2p_transfer', 1000, true, 'user123');
-      
-      checkAlerts();
-      
-      const alerts = monitoring.getAlerts(false); // Unacknowledged alerts
-      expect(alerts).toHaveLength(1);
-      expect(alerts[0].message).toBe('Test alert triggered');
-      expect(alerts[0].severity).toBe('HIGH');
-    });
+      await monitoring.logApiCall(mockReq, 'testAction', false, testError);
 
-    it('should respect alert cooldown', () => {
-      monitoring.addAlertRule({
-        id: 'test_alert',
-        name: 'Test Alert',
-        condition: (metrics) => metrics.length > 0,
-        severity: 'HIGH',
-        message: 'Test alert triggered',
-        cooldownMinutes: 1
-      });
-      
-      recordTransaction('p2p_transfer', 1000, true, 'user123');
-      
-      // Trigger alert twice
-      checkAlerts();
-      checkAlerts();
-      
-      const alerts = monitoring.getAlerts(false);
-      expect(alerts).toHaveLength(1); // Should only create one alert due to cooldown
-    });
+      expect(mockLog).toHaveBeenCalledWith(expect.objectContaining({
+        level: 'error',
+        message: 'API call failed: testAction',
+        data: {
+          action: 'testAction',
+          method: 'POST',
+          success: false,
+          error: 'Test error'
+        }
+      }));
 
-    it('should acknowledge alerts', () => {
-      monitoring.addAlertRule({
-        id: 'test_alert',
-        name: 'Test Alert',
-        condition: (metrics) => metrics.length > 0,
-        severity: 'HIGH',
-        message: 'Test alert triggered',
-        cooldownMinutes: 1
-      });
-      
-      recordTransaction('p2p_transfer', 1000, true, 'user123');
-      checkAlerts();
-      
-      const alerts = monitoring.getAlerts(false);
-      expect(alerts).toHaveLength(1);
-      
-      monitoring.acknowledgeAlert(alerts[0].id, 'admin_user');
-      
-      const acknowledgedAlerts = monitoring.getAlerts(true);
-      expect(acknowledgedAlerts).toHaveLength(1);
-      expect(acknowledgedAlerts[0].acknowledgedBy).toBe('admin_user');
-      expect(acknowledgedAlerts[0].acknowledgedAt).toBeDefined();
+      mockLog.mockRestore();
     });
   });
 
-  describe('Default Alert Rules', () => {
-    beforeEach(() => {
-      // Reset and setup default rules
-      (monitoring as any).alertRules = [];
-      monitoring.setupDefaultAlertRules();
-    });
+  describe('logError', () => {
+    it('should log error details', async () => {
+      const mockLog = jest.spyOn(monitoring, 'log').mockResolvedValue();
+      
+      const testError = new Error('Test error message');
+      const context = { action: 'test', userId: 'user123' };
 
-    it('should trigger high error rate alert', () => {
-      // Add many errors to trigger the alert
-      for (let i = 0; i < 10; i++) {
-        recordTransaction('p2p_transfer', 1000, false, 'user123'); // Failed transactions
-      }
-      for (let i = 0; i < 5; i++) {
-        recordTransaction('p2p_transfer', 1000, true, 'user123'); // Successful transactions
-      }
-      
-      checkAlerts();
-      
-      const alerts = monitoring.getAlerts(false);
-      const errorRateAlert = alerts.find(a => a.message.includes('Error rate is above 10%'));
-      expect(errorRateAlert).toBeDefined();
-    });
+      await monitoring.logError(testError, context);
 
-    it('should trigger high latency alert', () => {
-      // Add slow operations
-      for (let i = 0; i < 5; i++) {
-        recordTransaction('p2p_transfer', 6000, true, 'user123'); // 6 seconds
-      }
-      
-      checkAlerts();
-      
-      const alerts = monitoring.getAlerts(false);
-      const latencyAlert = alerts.find(a => a.message.includes('Average response time is above 5 seconds'));
-      expect(latencyAlert).toBeDefined();
-    });
+      expect(mockLog).toHaveBeenCalledWith(expect.objectContaining({
+        level: 'error',
+        message: 'Test error message',
+        data: {
+          error: testError.stack,
+          context: { action: 'test', userId: 'user123' }
+        }
+      }));
 
-    it('should trigger no transactions alert', () => {
-      // Don't add any transactions
-      checkAlerts();
-      
-      const alerts = monitoring.getAlerts(false);
-      const noTransactionsAlert = alerts.find(a => a.message.includes('No transactions in the last 10 minutes'));
-      expect(noTransactionsAlert).toBeDefined();
+      mockLog.mockRestore();
     });
   });
 
-  describe('Memory Management', () => {
-    it('should limit metrics to prevent memory issues', () => {
-      // Add more than 1000 metrics
-      for (let i = 0; i < 1100; i++) {
-        recordTransaction('p2p_transfer', 1000, true, 'user123');
-      }
+  describe('logPerformance', () => {
+    it('should log performance metrics', async () => {
+      const mockLog = jest.spyOn(monitoring, 'log').mockResolvedValue();
       
-      const metrics = monitoring.getMetrics();
-      expect(metrics.length).toBeLessThanOrEqual(1000);
+      const operation = 'testOperation';
+      const duration = 150;
+      const metadata = { userId: 'user123' };
+
+      await monitoring.logPerformance(operation, duration, metadata);
+
+      expect(mockLog).toHaveBeenCalledWith(expect.objectContaining({
+        level: 'info',
+        message: 'Performance: testOperation',
+        data: {
+          operation: 'testOperation',
+          duration: 150,
+          metadata: { userId: 'user123' }
+        }
+      }));
+
+      mockLog.mockRestore();
+    });
+  });
+
+  describe('getRecentLogs', () => {
+    it('should retrieve recent logs from Firestore', async () => {
+      const mockDocs = [
+        { id: '1', data: () => ({ message: 'log1', timestamp: new Date() }) },
+        { id: '2', data: () => ({ message: 'log2', timestamp: new Date() }) }
+      ];
+      
+      const mockGet = jest.fn().mockResolvedValue({ docs: mockDocs });
+      const mockLimit = jest.fn().mockReturnValue({ get: mockGet });
+      const mockOrderBy = jest.fn().mockReturnValue({ limit: mockLimit });
+      const mockCollection = jest.fn().mockReturnValue({ orderBy: mockOrderBy });
+      const mockFirestore = jest.fn().mockReturnValue({ collection: mockCollection });
+      
+      jest.doMock('firebase-admin', () => ({
+        firestore: mockFirestore
+      }));
+
+      const logs = await monitoring.getRecentLogs(50);
+
+      expect(mockCollection).toHaveBeenCalledWith('system_logs');
+      expect(mockOrderBy).toHaveBeenCalledWith('timestamp', 'desc');
+      expect(mockLimit).toHaveBeenCalledWith(50);
+      expect(logs).toHaveLength(2);
+      expect(logs[0]).toHaveProperty('id', '1');
+      expect(logs[1]).toHaveProperty('id', '2');
+    });
+
+    it('should handle Firestore errors gracefully', async () => {
+      const mockGet = jest.fn().mockRejectedValue(new Error('Firestore error'));
+      const mockLimit = jest.fn().mockReturnValue({ get: mockGet });
+      const mockOrderBy = jest.fn().mockReturnValue({ limit: mockLimit });
+      const mockCollection = jest.fn().mockReturnValue({ orderBy: mockOrderBy });
+      const mockFirestore = jest.fn().mockReturnValue({ collection: mockCollection });
+      
+      jest.doMock('firebase-admin', () => ({
+        firestore: mockFirestore
+      }));
+
+      const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
+
+      const logs = await monitoring.getRecentLogs();
+
+      expect(consoleSpy).toHaveBeenCalledWith('Failed to get recent logs:', expect.any(Error));
+      expect(logs).toEqual([]);
+
+      consoleSpy.mockRestore();
+    });
+  });
+
+  describe('getCorsLogs', () => {
+    it('should retrieve CORS-specific logs', async () => {
+      const mockDocs = [
+        { id: '1', data: () => ({ message: 'CORS success', timestamp: new Date() }) },
+        { id: '2', data: () => ({ message: 'CORS failure', timestamp: new Date() }) }
+      ];
+      
+      const mockGet = jest.fn().mockResolvedValue({ docs: mockDocs });
+      const mockLimit = jest.fn().mockReturnValue({ get: mockGet });
+      const mockOrderBy = jest.fn().mockReturnValue({ limit: mockLimit });
+      const mockWhere = jest.fn().mockReturnValue({ orderBy: mockOrderBy });
+      const mockCollection = jest.fn().mockReturnValue({ where: mockWhere });
+      const mockFirestore = jest.fn().mockReturnValue({ collection: mockCollection });
+      
+      jest.doMock('firebase-admin', () => ({
+        firestore: mockFirestore
+      }));
+
+      const logs = await monitoring.getCorsLogs(25);
+
+      expect(mockCollection).toHaveBeenCalledWith('system_logs');
+      expect(mockWhere).toHaveBeenCalledWith('message', '==', 'CORS success');
+      expect(mockOrderBy).toHaveBeenCalledWith('timestamp', 'desc');
+      expect(mockLimit).toHaveBeenCalledWith(25);
+      expect(logs).toHaveLength(2);
     });
   });
 }); 

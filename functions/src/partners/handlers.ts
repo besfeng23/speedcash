@@ -307,3 +307,106 @@ export async function partnerSubmitKybDocumentHandler(data: any, context: any) {
         throw new HttpsError('internal', 'Failed to submit document.');
     }
 }
+
+// --- Additional Partner Handlers ---
+
+export async function partnerGetProfileHandler(data: any, context: any) {
+    const partnerId = ensureIsPartner(context);
+
+    const partnerRef = db.doc(`partners/${partnerId}`);
+    const partnerDoc = await partnerRef.get();
+    
+    if (!partnerDoc.exists) {
+        throw new HttpsError('not-found', 'Partner profile not found.');
+    }
+
+    const partnerData = partnerDoc.data();
+    
+    // Get KYB documents
+    const kybDocsSnapshot = await partnerRef.collection('kyb_documents').get();
+    const kybDocuments = kybDocsSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+    }));
+
+    return {
+        ...partnerData,
+        kybDocuments
+    };
+}
+
+export async function partnerUpdateProfileHandler(data: any, context: any) {
+    const partnerId = ensureIsPartner(context);
+    const { businessName, email, mobileNumber, webhookUrl } = z.object({
+        businessName: z.string().optional(),
+        email: z.string().email().optional(),
+        mobileNumber: z.string().optional(),
+        webhookUrl: z.string().url().optional()
+    }).parse(data);
+
+    const partnerRef = db.doc(`partners/${partnerId}`);
+    const updateData: any = {
+        updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    };
+
+    if (businessName) updateData.businessName = businessName;
+    if (email) updateData.email = email;
+    if (mobileNumber) updateData.mobileNumber = mobileNumber;
+    if (webhookUrl) updateData.webhookUrl = webhookUrl;
+
+    await partnerRef.update(updateData);
+
+    return { success: true, message: 'Profile updated successfully.' };
+}
+
+export async function partnerGetTransactionsHandler(data: any, context: any) {
+    const partnerId = ensureIsPartner(context);
+    const { limit = 50, offset = 0, status, type } = z.object({
+        limit: z.number().int().positive().optional().default(50),
+        offset: z.number().int().nonnegative().optional().default(0),
+        status: z.string().optional(),
+        type: z.string().optional()
+    }).parse(data);
+
+    let query = db.collection('transactions')
+        .where('partnerId', '==', partnerId)
+        .orderBy('timestamp', 'desc');
+    
+    if (status) {
+        query = query.where('status', '==', status);
+    }
+    
+    if (type) {
+        query = query.where('type', '==', type);
+    }
+
+    const snapshot = await query.limit(limit).offset(offset).get();
+    const transactions = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+    }));
+
+    return { transactions };
+}
+
+export async function partnerGetActivityHandler(data: any, context: any) {
+    const partnerId = ensureIsPartner(context);
+    const { limit = 50, offset = 0 } = z.object({
+        limit: z.number().int().positive().optional().default(50),
+        offset: z.number().int().nonnegative().optional().default(0)
+    }).parse(data);
+
+    const query = db.collection('audit_logs')
+        .where('partnerId', '==', partnerId)
+        .orderBy('timestamp', 'desc')
+        .limit(limit)
+        .offset(offset);
+
+    const snapshot = await query.get();
+    const activities = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+    }));
+
+    return { activities };
+}
