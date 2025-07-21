@@ -7,8 +7,8 @@ import { useToast } from '@/hooks/use-toast';
 import { app } from '@/lib/firebase';
 import { useAuth } from './useAuth';
 
-const functions = getFunctions(app, 'asia-southeast1');
-const dispatcher = httpsCallable(functions, 'cpayDispatcher');
+// Replace with your actual Cloud Run URL for cpayDispatcher
+const CLOUD_RUN_DISPATCHER_URL = 'https://cpaydispatcher-n4f73lnkeq-uc.a.run.app';
 
 // This type helps us define that the payload will be wrapped with an idToken.
 type DispatcherPayload<T> = {
@@ -26,14 +26,21 @@ async function callDispatcher<TRequest, TResponse>(
   if (!idToken) {
     throw new Error('Authentication token is missing. Please log in.');
   }
-
   try {
-    const result = await dispatcher({
-      action,
-      payload,
-      idToken, // The backend dispatcher can now use this token if needed
+    const response = await fetch(CLOUD_RUN_DISPATCHER_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${idToken}`
+      },
+      body: JSON.stringify({ action, payload })
     });
-    return result.data as TResponse;
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || response.statusText);
+    }
+    const data = await response.json();
+    return data.data as TResponse;
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
     console.error(`Error calling action ${action} via dispatcher:`, error);
@@ -64,13 +71,22 @@ export function useApi<TResponse = unknown, TRequest = unknown>(actionName: stri
   return { call: mutateAsync, isLoading: isPending, error: error?.message || null, ...rest };
 }
 
-export async function apiCall<TResponse = unknown>(action: string, payload?: unknown): Promise<TResponse> {
+export async function apiCall<TResponse = unknown>(action: string, payload?: unknown, idToken?: string | null): Promise<TResponse> {
   try {
-    const result = await dispatcher({
-      action,
-      payload,
+    const response = await fetch(CLOUD_RUN_DISPATCHER_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(idToken ? { 'Authorization': `Bearer ${idToken}` } : {})
+      },
+      body: JSON.stringify({ action, payload })
     });
-    return result.data as TResponse;
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || response.statusText);
+    }
+    const data = await response.json();
+    return data.data as TResponse;
   } catch (error: unknown) {
     console.error(`API call failed for action '${action}':`, error);
     throw error;
