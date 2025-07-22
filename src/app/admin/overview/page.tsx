@@ -17,7 +17,11 @@ type ActivityLog = {
     adminName: string;
     details: {
         action: string;
-        [key: string]: any;
+        transactionId?: string;
+        targetUid?: string;
+        newStatus?: string;
+        targetUser?: string;
+        [key: string]: unknown;
     };
     timestamp: {
         seconds: number;
@@ -66,7 +70,12 @@ function ActionableQueueCard({ title, value, icon: Icon, href, isLoading }: { ti
 
 
 export default function AdminDashboard() {
-  const { data: dashboardStats, isLoading: statsLoading } = useApiQuery<any>(
+  const { data: dashboardStats, isLoading: statsLoading } = useApiQuery<{
+    pendingKycCount: number;
+    pendingWithdrawalCount: number;
+    newUsersToday: number;
+    totalVolumeToday: number;
+  }>(
     'adminGetDashboardStats',
     undefined,
     { enabled: true, queryKey: ['adminGetDashboardStats'] }

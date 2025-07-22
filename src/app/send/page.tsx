@@ -90,10 +90,11 @@ function SendMoneyContent() {
             currency: "PHP"
         });
 
-        if (result && (result as any).success) {
+        if (result && typeof result === 'object' && 'success' in result && result.success) {
+            const successResult = result as { success: boolean; receiverName?: string };
             toast({
                 title: "Transfer Successful!",
-                description: `You have sent ₱${transferAmount.toFixed(2)} to ${(result as any).receiverName}.`
+                description: `You have sent ₱${transferAmount.toFixed(2)} to ${successResult.receiverName || 'recipient'}.`
             });
             router.push("/consumer");
         }

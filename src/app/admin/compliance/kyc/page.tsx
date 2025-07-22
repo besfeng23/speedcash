@@ -46,7 +46,14 @@ type Submission = {
 
 export default function KycQueuePage() {
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
-  const [aiAnalysisResult, setAiAnalysisResult] = useState<any | null>(null); // Changed type to any as KycDataExtractionOutput is commented out
+  const [aiAnalysisResult, setAiAnalysisResult] = useState<{
+    extractedData?: {
+      fullName?: string;
+      dateOfBirth?: string;
+      address?: string;
+    };
+    confidence?: number;
+  } | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();

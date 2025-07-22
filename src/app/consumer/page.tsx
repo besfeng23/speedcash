@@ -18,7 +18,11 @@ type Transaction = {
   id: string;
   type: string;
   amount: number;
-  details?: any;
+  details?: {
+    senderName?: string;
+    recipientName?: string;
+    [key: string]: unknown;
+  };
 };
 
 const getTransactionIcon = (type: string) => {
@@ -66,7 +70,10 @@ export default function WalletDashboard() {
     undefined,
     {
       enabled: !!user,
-      select: (data: any) => ({ transactions: data.transactions.slice(0, 3) }),
+      select: (data: unknown) => {
+        const transactionData = data as { transactions?: Transaction[] };
+        return { transactions: transactionData.transactions?.slice(0, 3) || [] };
+      },
       queryKey: ['getTransactionHistory', 'recent']
     }
   );
@@ -111,7 +118,7 @@ export default function WalletDashboard() {
               <p className="text-sm text-muted-foreground">You have {notifications.length} new notifications.</p>
             </div>
             <div className="grid gap-1">
-              {notifications.length > 0 ? notifications.map((tx: any) => {
+              {notifications.length > 0 ? notifications.map((tx: Transaction) => {
                 const Icon = getTransactionIcon(tx.type);
                 return (
                  <div
