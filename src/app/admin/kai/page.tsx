@@ -5,7 +5,6 @@ import { useState } from 'react';
 import { Bot, Loader2, Send, User, ShieldAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
@@ -81,8 +80,8 @@ export default function SuperadminKaiPage() {
                                 <AlertDescription>
                                     As an admin, you can ask Kai to perform privileged actions. Try prompts like:
                                     <ul className="list-disc pl-5 mt-2 text-xs">
-                                        <li>"Suspend user [user_id]"</li>
-                                        <li>"Generate an image of a secure vault"</li>
+                                        <li>&quot;Suspend user [user_id]&quot;</li>
+                                        <li>&quot;Generate an image of a secure vault&quot;</li>
                                     </ul>
                                 </AlertDescription>
                             </Alert>

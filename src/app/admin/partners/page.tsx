@@ -57,7 +57,7 @@ export default function PartnerManagementPage() {
   
   const handleDeactivate = async (partnerId: string, partnerName: string) => {
       const result = await suspendUser({ uid: partnerId, suspend: true });
-      if ((result as any)?.success) {
+      if (result && typeof result === 'object' && 'success' in result && result.success) {
           toast({
               title: "Partner Deactivated",
               description: `${partnerName} has been deactivated.`,

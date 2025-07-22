@@ -47,7 +47,7 @@ export default function PartnerSignupPage() {
             mobileNumber: mobileNumber, // Pass the mobile number
         });
 
-        if (!(partnerResult as any)?.success) {
+        if (!(partnerResult && typeof partnerResult === 'object' && 'success' in partnerResult && partnerResult.success)) {
             throw new Error('Failed to create partner-specific records.');
         }
 
@@ -63,12 +63,12 @@ export default function PartnerSignupPage() {
       // 4. Redirect to the partner portal after successful signup
       router.push('/partner');
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Partner signup failed:", error);
       toast({
         variant: "destructive",
         title: "Signup Failed",
-        description: error.message,
+        description: error instanceof Error ? error.message : 'An unexpected error occurred',
       });
     } finally {
       setIsLoading(false);

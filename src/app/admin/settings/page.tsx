@@ -76,7 +76,7 @@ export default function SettingsPage() {
         accentColor,
     });
     
-    if ((result as any)?.success) {
+    if (result && typeof result === 'object' && 'success' in result && result.success) {
       toast({
         title: "Changes Saved",
         description: "Global branding settings have been updated.",
@@ -204,7 +204,7 @@ export default function SettingsPage() {
                         <div className="text-xs p-2 bg-muted rounded-md font-mono">
                             <p className="font-sans font-semibold mb-1">Add this TXT record to your DNS settings:</p>
                             <p>Host: _firebase.{partnerCustomDomain}</p>
-                            <p>Value: "d9a8c7b6e5f4d3c2b1a0"</p>
+                            <p>Value: &quot;d9a8c7b6e5f4d3c2b1a0&quot;</p>
                         </div>
                     }
                 </div>

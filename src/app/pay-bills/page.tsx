@@ -57,7 +57,7 @@ export default function PayBillsPage() {
             amount: parseFloat(amount),
         });
 
-        if ((result as any)?.success) {
+        if (result && typeof result === 'object' && 'success' in result && result.success) {
             toast({
                 title: "Payment Successful",
                 description: `Your payment of ₱${amount} to ${selectedBiller.name} has been processed.`,

@@ -44,7 +44,7 @@ export default function UserProfilePage() {
         <Card>
             <CardHeader>
                 <CardTitle>User Profile</CardTitle>
-                <CardDescription>Comprehensive details of the user's account and status.</CardDescription>
+                <CardDescription>Comprehensive details of the user&apos;s account and status.</CardDescription>
             </CardHeader>
             <CardContent>
                 {isLoading ? (

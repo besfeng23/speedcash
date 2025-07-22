@@ -84,7 +84,7 @@ export default function KycPage() {
             documentUrls: [documentUrl],
         });
 
-        if ((result as any)?.success) {
+        if (result && typeof result === 'object' && 'success' in result && result.success) {
             setStep(3);
         }
     };
@@ -164,7 +164,7 @@ export default function KycPage() {
                         <Card className="rounded-xl shadow-lg">
                             <CardHeader>
                                 <CardTitle className="font-headline text-2xl">Upload Document</CardTitle>
-                                <CardDescription>Upload a clear photo of a valid government-issued ID (e.g., Passport, Driver's License).</CardDescription>
+                                <CardDescription>Upload a clear photo of a valid government-issued ID (e.g., Passport, Driver&apos;s License).</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-6">
                                 <div className="flex flex-col items-center justify-center space-y-4 rounded-lg border-2 border-dashed p-12">

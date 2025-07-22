@@ -53,7 +53,7 @@ export default function BuyLoadPage() {
             amount: selectedLoad.amount,
         });
 
-        if ((result as any)?.success) {
+        if (result && typeof result === 'object' && 'success' in result && result.success) {
             toast({
                 title: "Purchase Successful",
                 description: `₱${selectedLoad.amount} load sent to ${mobileNumber}.`,

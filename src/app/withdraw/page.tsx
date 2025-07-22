@@ -58,7 +58,7 @@ export default function WithdrawPage() {
             bankDetails: bankDetails
         };
 
-        let result: any;
+        let result: unknown;
         if (transferMethod === 'instapay') {
             result = await initiateInstaPay(payload);
         } else if (transferMethod === 'pesonet') {
@@ -68,7 +68,7 @@ export default function WithdrawPage() {
             return;
         }
 
-        if (result?.success) {
+        if (result && typeof result === 'object' && 'success' in result && result.success) {
             toast({
                 title: "Request Submitted",
                 description: "Your withdrawal request has been submitted for approval.",
@@ -213,7 +213,7 @@ export default function WithdrawPage() {
                                    </div>
                                </div>
                                 <div className="pt-2 text-xs text-muted-foreground">
-                                    By clicking confirm, you agree to CPay's terms and certify that the provided details are correct. Incorrect details may result in delayed or lost funds.
+                                    By clicking confirm, you agree to CPay&apos;s terms and certify that the provided details are correct. Incorrect details may result in delayed or lost funds.
                                 </div>
                             </CardContent>
                              <CardFooter className="flex gap-4">

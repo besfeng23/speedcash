@@ -17,7 +17,11 @@ type Transaction = {
   amount: number;
   currency: string;
   timestamp: { seconds: number };
-  details?: any;
+  details?: {
+    senderName?: string;
+    recipientName?: string;
+    [key: string]: unknown;
+  };
 };
 
 
@@ -52,7 +56,7 @@ export default function UserTransactionsPage() {
     <Card>
       <CardHeader>
         <CardTitle>Transaction History</CardTitle>
-        <CardDescription>A complete ledger of this user's transactions.</CardDescription>
+        <CardDescription>A complete ledger of this user&apos;s transactions.</CardDescription>
          <div className="pt-4">
              <Input placeholder="Search by Transaction ID or type..." />
           </div>

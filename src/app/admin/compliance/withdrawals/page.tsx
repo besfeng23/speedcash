@@ -42,7 +42,7 @@ export default function WithdrawalQueuePage() {
 
   const handleApprove = async (transactionId: string) => {
     const result = await approveWithdrawal({ transactionId });
-    if ((result as any)?.success) {
+    if (result && typeof result === 'object' && 'success' in result && result.success) {
       toast({ title: "Success", description: "Withdrawal has been approved and is processing." });
       queryClient.invalidateQueries({ queryKey: ["adminGetWithdrawalQueue"] });
       queryClient.invalidateQueries({ queryKey: ["adminGetDashboardStats"] });
@@ -51,7 +51,7 @@ export default function WithdrawalQueuePage() {
 
   const handleReject = async (transactionId: string) => {
     const result = await rejectWithdrawal({ transactionId, reason: "Admin rejection." });
-     if ((result as any)?.success) {
+     if (result && typeof result === 'object' && 'success' in result && result.success) {
       toast({ title: "Success", description: "Withdrawal has been rejected and refunded." });
       queryClient.invalidateQueries({ queryKey: ["adminGetWithdrawalQueue"] });
       queryClient.invalidateQueries({ queryKey: ["adminGetDashboardStats"] });

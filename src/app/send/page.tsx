@@ -90,10 +90,11 @@ function SendMoneyContent() {
             currency: "PHP"
         });
 
-        if (result && (result as any).success) {
+        if (result && typeof result === 'object' && 'success' in result && result.success) {
+            const successResult = result as { success: boolean; receiverName?: string };
             toast({
                 title: "Transfer Successful!",
-                description: `You have sent ₱${transferAmount.toFixed(2)} to ${(result as any).receiverName}.`
+                description: `You have sent ₱${transferAmount.toFixed(2)} to ${successResult.receiverName || 'recipient'}.`
             });
             router.push("/consumer");
         }
@@ -104,7 +105,7 @@ function SendMoneyContent() {
             <Card className="rounded-xl shadow-lg">
                 <CardHeader>
                     <CardTitle className="font-headline text-2xl">Send to CPay User</CardTitle>
-                    <CardDescription>Enter the recipient's mobile number and the amount to send.</CardDescription>
+                    <CardDescription>Enter the recipient&apos;s mobile number and the amount to send.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div className="space-y-2">

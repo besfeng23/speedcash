@@ -61,7 +61,7 @@ export default function TeamManagementPage() {
     const role = formData.get("role") as string;
     
     const result = await inviteMember({ name, email, role });
-    if ((result as any)?.success) {
+    if (result && typeof result === 'object' && 'success' in result && result.success) {
       toast({
         title: "Invite Sent",
         description: `An invitation has been sent to ${email}.`,
@@ -74,7 +74,7 @@ export default function TeamManagementPage() {
   const handleRemove = async () => {
     if (!selectedMember) return;
     const result = await removeMember({ userId: selectedMember.id });
-    if ((result as any)?.success) {
+    if (result && typeof result === 'object' && 'success' in result && result.success) {
         toast({
             title: "Member Removed",
             description: `${selectedMember.name} has been removed from the team.`,

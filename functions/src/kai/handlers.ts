@@ -18,6 +18,32 @@ const AiAssistantInputSchema = z.object({
   })).optional(),
 });
 
+// Fallback responses for when OpenAI API is not available
+function generateFallbackResponse(query: string): string {
+  const responses: { [key: string]: string } = {
+    'hello': "Hello! I'm Kai, your CPay AI assistant. How can I help you today?",
+    'hi': "Hi there! I'm here to help with your CPay questions.",
+    'help': "I can help you with CPay features like sending money, checking balances, transaction history, and more. What would you like to know?",
+    'balance': "To check your balance, you can view it on your dashboard or in the mobile app. Your current balance is displayed prominently at the top of your account.",
+    'send': "To send money, go to the Send page, enter the recipient's details and amount, then confirm the transaction.",
+    'transaction': "You can view your transaction history in the History section of your account. All your past transactions are listed there with details.",
+    'kyc': "KYC (Know Your Customer) verification helps secure your account. Upload your valid ID and other required documents in the KYC section.",
+    'support': "For additional support, you can create a ticket through the Help & Support section, or contact our customer service team.",
+    'withdraw': "To withdraw funds, go to the Withdraw section, select your bank, enter the amount, and confirm the transaction.",
+    'deposit': "You can deposit funds through various methods including bank transfers, payment gateways, or cash-in partners.",
+  };
+
+  // Find the most relevant response
+  for (const [keyword, response] of Object.entries(responses)) {
+    if (query.includes(keyword)) {
+      return response;
+    }
+  }
+
+  // Default response
+  return "I'm here to help with your CPay questions! You can ask me about sending money, checking balances, transaction history, KYC verification, and more. What would you like to know?";
+}
+
 
 export async function askAuthenticatedKaiHandler(data: any, context: any) {
     console.log(`[KAI] Processing request from user: ${context.auth?.uid}`);
@@ -33,9 +59,13 @@ export async function askAuthenticatedKaiHandler(data: any, context: any) {
 
         // Check OpenAI API key
         const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
-        if (!OPENAI_API_KEY) {
-            console.error('[KAI] OpenAI API key not configured');
-            throw new HttpsError('failed-precondition', 'OpenAI API key is not set.');
+        if (!OPENAI_API_KEY || OPENAI_API_KEY === 'demo_key_replace_with_actual_openai_api_key') {
+            console.error('[KAI] OpenAI API key not configured properly');
+            // Return a helpful demo response instead of throwing an error
+            return {
+                reply: "Hello! I'm Kai, the AI assistant for CPay. To fully activate my capabilities, please configure a valid OpenAI API key in your environment variables. For now, I can help with basic information about CPay features.",
+                intent: 'DEMO_MODE'
+            };
         }
 
         // Prepare messages for OpenAI
@@ -67,7 +97,13 @@ export async function askAuthenticatedKaiHandler(data: any, context: any) {
         if (!response.ok) {
             const errorText = await response.text();
             console.error(`[KAI] OpenAI API error: ${response.status} ${response.statusText} - ${errorText}`);
-            throw new HttpsError('internal', `Failed to get response from OpenAI: ${response.status} ${response.statusText}`);
+            
+            // Provide helpful fallback responses based on common queries
+            const fallbackResponse = generateFallbackResponse(query.toLowerCase());
+            return {
+                reply: fallbackResponse,
+                intent: 'FALLBACK_RESPONSE'
+            };
         }
 
         const dataJson: any = await response.json();

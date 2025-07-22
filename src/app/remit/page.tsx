@@ -23,7 +23,7 @@ type Transaction = {
   amount: number;
   currency: string;
   status: string;
-  timestamp: any;
+  timestamp: { seconds: number } | string;
 };
 
 
@@ -33,7 +33,16 @@ export default function RemitPage() {
     const [phpAmount, setPhpAmount] = useState("");
     const [userInfo, setUserInfo] = useState("");
     const [isAiProcessing, setIsAiProcessing] = useState(false);
-    const [recipientDetails, setRecipientDetails] = useState<any | null>(null);
+    const [recipientDetails, setRecipientDetails] = useState<{
+        name?: string;
+        bankAccount?: string;
+        address?: string;
+        recipientName?: string;
+        recipientBankName?: string;
+        recipientBankAccountNumber?: string;
+        purposeOfTransfer?: string;
+        [key: string]: unknown;
+    } | null>(null);
     const { toast } = useToast();
     const router = useRouter();
 
@@ -78,7 +87,7 @@ export default function RemitPage() {
             recipientDetails: recipientDetails,
         });
 
-        if (result && (result as any).success) {
+        if (result && typeof result === 'object' && 'success' in result && result.success) {
             toast({
                 title: "Remittance Sent!",
                 description: `Your transfer of ₱${phpAmount} is being processed.`,
@@ -143,7 +152,7 @@ export default function RemitPage() {
                         <Card className="rounded-xl shadow-lg">
                             <CardHeader>
                                 <CardTitle className="font-headline text-2xl">Recipient Details</CardTitle>
-                                <CardDescription>Describe who you're sending to and for what purpose. Our AI will handle the rest.</CardDescription>
+                                <CardDescription>Describe who you&apos;re sending to and for what purpose. Our AI will handle the rest.</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                <div className="space-y-2">
@@ -191,10 +200,10 @@ export default function RemitPage() {
                                <Separator />
                                 <div className="space-y-2 text-sm">
                                     <p className="font-semibold text-foreground">Recipient:</p>
-                                    <p className="text-muted-foreground"><User className="inline-block h-4 w-4 mr-2" />{recipientDetails.recipientName}</p>
-                                    <p className="text-muted-foreground"><Building2 className="inline-block h-4 w-4 mr-2" />{recipientDetails.recipientBankName}, {recipientDetails.recipientBankAccountNumber}</p>
+                                    <p className="text-muted-foreground"><User className="inline-block h-4 w-4 mr-2" />{String(recipientDetails.recipientName || '')}</p>
+                                    <p className="text-muted-foreground"><Building2 className="inline-block h-4 w-4 mr-2" />{String(recipientDetails.recipientBankName || '')}, {String(recipientDetails.recipientBankAccountNumber || '')}</p>
                                     <p className="font-semibold text-foreground mt-2">Purpose:</p>
-                                    <p className="text-muted-foreground">{recipientDetails.purposeOfTransfer}</p>
+                                    <p className="text-muted-foreground">{String(recipientDetails.purposeOfTransfer || '')}</p>
                                 </div>
                                 <Separator />
                                  <div className="space-y-2 text-sm">

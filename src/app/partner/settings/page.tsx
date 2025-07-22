@@ -152,9 +152,9 @@ export default function PartnerSettingsPage() {
             </CardHeader>
             <CardContent>
                 <div className="w-full rounded-lg border bg-background p-4 space-y-8" style={{
-                    ['--partner-primary' as any]: primaryColor,
-                    ['--partner-accent' as any]: accentColor
-                }}>
+                    '--partner-primary': primaryColor,
+                    '--partner-accent': accentColor
+                } as React.CSSProperties}>
                     <div className="flex items-center justify-between">
                        {logoPreview ? (
                          <Image src={logoPreview} alt="Partner Logo Preview" width={120} height={32} data-ai-hint="logo company"/>

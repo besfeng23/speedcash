@@ -22,7 +22,7 @@ type Payout = {
   id: string;
   amount: number;
   status: string;
-  timestamp: any;
+  timestamp: { seconds: number } | string;
   type?: string; // Add optional type property
   details: {
     bankDetails: {
@@ -59,7 +59,7 @@ export default function PayoutsPage() {
     { enabled: !!user, queryKey: ['getTransactionHistory'] }
   );
 
-  const { data: stats } = useApiQuery<any>(
+  const { data: stats } = useApiQuery<{ balance?: number; pendingPayouts?: number }>(
     'partnerGetDashboardStats',
     undefined,
     { enabled: !!user, queryKey: ['partnerGetDashboardStats'] }
@@ -94,7 +94,7 @@ export default function PayoutsPage() {
       bankDetails: { bankCode, accountNumber, accountName },
     });
     
-    if ((result as any)?.success) {
+    if (result && typeof result === 'object' && 'success' in result && result.success) {
       toast({
         title: "Payout Request Submitted",
         description: "Your request has been sent for admin approval.",
@@ -221,7 +221,7 @@ export default function PayoutsPage() {
               ) : payouts.length === 0 ? (
                 <TableRow>
                     <TableCell colSpan={5} className="text-center h-24 text-muted-foreground">
-                        You haven't made any payouts yet.
+                        You haven&apos;t made any payouts yet.
                     </TableCell>
                 </TableRow>
               ) : (
@@ -229,7 +229,7 @@ export default function PayoutsPage() {
                     <TableRow key={payout.id}>
                     <TableCell className="font-mono text-xs">{payout.id}</TableCell>
                     <TableCell className="font-medium">₱{payout.amount.toLocaleString('en-US', {minimumFractionDigits: 2})}</TableCell>
-                    <TableCell>{new Date(payout.timestamp.seconds * 1000).toLocaleDateString()}</TableCell>
+                    <TableCell>{new Date(typeof payout.timestamp === 'object' && 'seconds' in payout.timestamp ? payout.timestamp.seconds * 1000 : payout.timestamp).toLocaleDateString()}</TableCell>
                     <TableCell>
                         <Badge variant={getStatusVariant(payout.status)}>
                             {payout.status.replace('_', ' ')}
