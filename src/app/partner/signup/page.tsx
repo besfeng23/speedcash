@@ -24,7 +24,7 @@ export default function PartnerSignupPage() {
   const router = useRouter();
   const { toast } = useToast();
   
-  const { call: createPartnerRecord, isLoading: isCreatingPartner } = useApi('createPartner');
+  const createPartnerRecordMutation = useApi('createPartner');
 
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -40,7 +40,7 @@ export default function PartnerSignupPage() {
         await updateProfile(user, { displayName: businessName }); // For partners, display name is the business name
         
         // 3. Call our backend function to create the partner record and set the custom claim
-        const partnerResult = await createPartnerRecord({
+        const partnerResult = await createPartnerRecordMutation.mutateAsync({
             uid: user.uid,
             businessName: businessName,
             email: user.email,
@@ -128,8 +128,8 @@ export default function PartnerSignupPage() {
                 required
               />
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading || isCreatingPartner}>
-              {isLoading || isCreatingPartner ? (
+            <Button type="submit" className="w-full" disabled={isLoading || createPartnerRecordMutation.isPending}>
+              {isLoading || createPartnerRecordMutation.isPending ? (
                 <Loader2 className="animate-spin" />
               ) : (
                 <>

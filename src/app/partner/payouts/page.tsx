@@ -67,7 +67,7 @@ export default function PayoutsPage() {
   
   const payouts = transactions?.transactions || [];
 
-  const { call: requestPayout, isLoading: isRequestingPayout } = useApi('initiateCashOut');
+  const requestPayoutMutation = useApi('initiateCashOut');
 
   const availableBalance = balanceData?.balances?.PHP ?? 0;
 
@@ -88,7 +88,7 @@ export default function PayoutsPage() {
         return;
     }
 
-    const result = await requestPayout({
+    const result = await requestPayoutMutation.mutateAsync({
       amount,
       currency: "PHP",
       bankDetails: { bankCode, accountNumber, accountName },
@@ -164,8 +164,8 @@ export default function PayoutsPage() {
                 <Input id="accountName" name="accountName" placeholder="Full name as registered in bank" required />
               </div>
               <DialogFooter>
-                <Button type="submit" className="w-full" disabled={isRequestingPayout}>
-                  {isRequestingPayout && <Loader2 className="animate-spin mr-2"/>}
+                <Button type="submit" className="w-full" disabled={requestPayoutMutation.isPending}>
+                  {requestPayoutMutation.isPending && <Loader2 className="animate-spin mr-2"/>}
                   Submit Payout Request
                 </Button>
               </DialogFooter>

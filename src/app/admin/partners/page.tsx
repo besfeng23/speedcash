@@ -36,7 +36,7 @@ export default function PartnerManagementPage() {
     { queryKey: ['adminPartners'] }
   );
   
-  const { call: suspendUser, isLoading: isSuspending } = useApi('adminSuspendUser');
+  const suspendUserMutation = useApi('adminSuspendUser');
 
   const allPartners = response?.partners || [];
 
@@ -56,7 +56,7 @@ export default function PartnerManagementPage() {
   };
   
   const handleDeactivate = async (partnerId: string, partnerName: string) => {
-      const result = await suspendUser({ uid: partnerId, suspend: true });
+      const result = await suspendUserMutation.mutateAsync({ uid: partnerId, suspend: true });
       if ((result as any)?.success) {
           toast({
               title: "Partner Deactivated",
@@ -172,9 +172,9 @@ export default function PartnerManagementPage() {
                           <DropdownMenuItem 
                             className="text-destructive" 
                             onClick={() => handleDeactivate(partner.id, partner.businessName)}
-                            disabled={isSuspending}
+                            disabled={suspendUserMutation.isPending}
                           >
-                             {isSuspending && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                             {suspendUserMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                             Deactivate
                           </DropdownMenuItem>
                         </DropdownMenuContent>

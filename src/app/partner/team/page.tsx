@@ -43,8 +43,8 @@ export default function TeamManagementPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { call: inviteMember, isLoading: isInviting } = useApi('partnerInviteMember');
-  const { call: removeMember, isLoading: isRemoving } = useApi('partnerRemoveMember');
+  const inviteMemberMutation = useApi('partnerInviteMember');
+  const removeMemberMutation = useApi('partnerRemoveMember');
 
   const { data: teamResponse, isLoading: isLoadingTeam, error } = useApiQuery<{teamMembers: TeamMember[]}>(
       'partnerGetTeamMembers',
@@ -60,7 +60,7 @@ export default function TeamManagementPage() {
     const email = formData.get("email") as string;
     const role = formData.get("role") as string;
     
-    const result = await inviteMember({ name, email, role });
+    const result = await inviteMemberMutation.mutateAsync({ name, email, role });
     if ((result as any)?.success) {
       toast({
         title: "Invite Sent",
@@ -73,7 +73,7 @@ export default function TeamManagementPage() {
 
   const handleRemove = async () => {
     if (!selectedMember) return;
-    const result = await removeMember({ userId: selectedMember.id });
+    const result = await removeMemberMutation.mutateAsync({ userId: selectedMember.id });
     if ((result as any)?.success) {
         toast({
             title: "Member Removed",
@@ -127,8 +127,8 @@ export default function TeamManagementPage() {
                     </Select>
                   </div>
                   <DialogFooter>
-                    <Button type="submit" className="w-full" disabled={isInviting}>
-                      {isInviting && <Loader2 className="animate-spin mr-2"/>}
+                    <Button type="submit" className="w-full" disabled={inviteMemberMutation.isPending}>
+                      {inviteMemberMutation.isPending && <Loader2 className="animate-spin mr-2"/>}
                       Send Invite
                     </Button>
                   </DialogFooter>
@@ -216,7 +216,7 @@ export default function TeamManagementPage() {
                                 <DropdownMenuItem 
                                     className="text-destructive"
                                     onClick={() => { setSelectedMember(member); setIsRemoveOpen(true); }}
-                                    disabled={isRemoving}
+                                    disabled={removeMemberMutation.isPending}
                                 >
                                     Remove Member
                                 </DropdownMenuItem>
@@ -237,9 +237,9 @@ export default function TeamManagementPage() {
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel disabled={isRemoving}>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleRemove} disabled={isRemoving} className="bg-destructive hover:bg-destructive/90">
-                        {isRemoving && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                    <AlertDialogCancel disabled={removeMemberMutation.isPending}>Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleRemove} disabled={removeMemberMutation.isPending} className="bg-destructive hover:bg-destructive/90">
+                        {removeMemberMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                         Yes, remove member
                     </AlertDialogAction>
                 </AlertDialogFooter>

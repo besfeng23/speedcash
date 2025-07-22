@@ -41,7 +41,7 @@ export default function PayBillsPage() {
     const router = useRouter();
     const { toast } = useToast();
 
-    const { call: payBill, isLoading } = useApi('initiateBillPayment');
+    const payBillMutation = useApi('initiateBillPayment');
 
     const handleNext = () => setStep(step + 1);
     const handleBack = () => setStep(step - 1);
@@ -51,7 +51,7 @@ export default function PayBillsPage() {
     const handleConfirm = async () => {
         if (!selectedBiller || !accountNumber || !amount) return;
 
-        const result = await payBill({
+        const result = await payBillMutation.mutateAsync({
             billerName: selectedBiller.name,
             accountNumber,
             amount: parseFloat(amount),
@@ -131,7 +131,7 @@ export default function PayBillsPage() {
                                     <Input id="amount" type="number" value={amount} onChange={(e) => setAmount(e.target.value)}/>
                                 </div>
                                 <div className="flex gap-4 pt-4">
-                                    <Button variant="outline" className="w-full" onClick={handleBack}>Back</Button>
+                                    <Button variant="outline" className="w-full" onClick={handleBack} disabled={payBillMutation.isPending}>Back</Button>
                                     <Button className="w-full" onClick={handleNext} disabled={!accountNumber || !amount}>Review Payment</Button>
                                 </div>
                             </CardContent>
@@ -172,12 +172,12 @@ export default function PayBillsPage() {
                                 
                                 <AlertDialog>
                                     <div className="flex gap-4">
-                                        <Button variant="outline" className="w-full" onClick={handleBack} disabled={isLoading}>
+                                        <Button variant="outline" className="w-full" onClick={handleBack} disabled={payBillMutation.isPending}>
                                             Back
                                         </Button>
                                         <AlertDialogTrigger asChild>
-                                            <Button className="w-full" disabled={isLoading}>
-                                                {isLoading ? <Loader2 className="mr-2 animate-spin"/> : <Check className="mr-2"/>}
+                                            <Button className="w-full" disabled={payBillMutation.isPending}>
+                                                {payBillMutation.isPending ? <Loader2 className="mr-2 animate-spin"/> : <Check className="mr-2"/>}
                                                 Confirm & Pay
                                             </Button>
                                         </AlertDialogTrigger>
@@ -190,9 +190,9 @@ export default function PayBillsPage() {
                                             </AlertDialogDescription>
                                         </AlertDialogHeader>
                                         <AlertDialogFooter>
-                                            <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
-                                            <AlertDialogAction onClick={handleConfirm} disabled={isLoading}>
-                                                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                                            <AlertDialogCancel disabled={payBillMutation.isPending}>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction onClick={handleConfirm} disabled={payBillMutation.isPending}>
+                                                {payBillMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                                                 Confirm
                                             </AlertDialogAction>
                                         </AlertDialogFooter>

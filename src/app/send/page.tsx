@@ -45,7 +45,7 @@ function SendMoneyContent() {
     const [mobileNumber, setMobileNumber] = useState(searchParams.get('mobileNumber') || "");
     const [amount, setAmount] = useState("");
     const [recipient, setRecipient] = useState<{name: string, mobile: string} | null>(null);
-    const { call: initiateTransfer, isLoading } = useApi("initiateP2PTransfer");
+    const initiateTransferMutation = useApi('initiateP2PTransfer');
     const { toast } = useToast();
 
     // Debounced lookup function
@@ -84,7 +84,7 @@ function SendMoneyContent() {
             return;
         }
 
-        const result = await initiateTransfer({
+        const result = await initiateTransferMutation.mutateAsync({
             recipientMobileNumber: recipient.mobile,
             amount: transferAmount,
             currency: "PHP"
@@ -145,7 +145,7 @@ function SendMoneyContent() {
                     
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
-                            <Button className="w-full" size="lg" disabled={!recipient || !amount || isLoading}>
+                            <Button className="w-full" size="lg" disabled={!recipient || !amount || initiateTransferMutation.isPending}>
                                 <Wallet className="mr-2 h-5 w-5" />
                                 Send Payment
                             </Button>
@@ -160,9 +160,9 @@ function SendMoneyContent() {
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                                <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleSend} disabled={isLoading}>
-                                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                                <AlertDialogCancel disabled={initiateTransferMutation.isPending}>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleSend} disabled={initiateTransferMutation.isPending}>
+                                    {initiateTransferMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                                     Confirm & Send
                                 </AlertDialogAction>
                             </AlertDialogFooter>

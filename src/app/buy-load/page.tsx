@@ -38,7 +38,7 @@ export default function BuyLoadPage() {
     const router = useRouter();
     const { toast } = useToast();
 
-    const { call: buyLoad, isLoading } = useApi('initiateBuyLoad');
+    const buyLoadMutation = useApi('initiateBuyLoad');
 
     const networkLogo = getNetworkLogo(mobileNumber);
 
@@ -48,7 +48,7 @@ export default function BuyLoadPage() {
     const handleConfirm = async () => {
         if (!selectedLoad || !mobileNumber) return;
         
-        const result = await buyLoad({
+        const result = await buyLoadMutation.mutateAsync({
             mobileNumber,
             amount: selectedLoad.amount,
         });
@@ -148,11 +148,11 @@ export default function BuyLoadPage() {
                                 
                                 <AlertDialog>
                                     <div className="flex gap-4">
-                                        <Button variant="outline" className="w-full" onClick={handleBack} disabled={isLoading}>
+                                        <Button variant="outline" className="w-full" onClick={handleBack} disabled={buyLoadMutation.isPending}>
                                             Back
                                         </Button>
                                         <AlertDialogTrigger asChild>
-                                            <Button className="w-full" disabled={isLoading}>
+                                            <Button className="w-full" disabled={buyLoadMutation.isPending}>
                                                 <Check className="mr-2"/>
                                                 Confirm & Pay
                                             </Button>
@@ -166,9 +166,9 @@ export default function BuyLoadPage() {
                                             </AlertDialogDescription>
                                         </AlertDialogHeader>
                                         <AlertDialogFooter>
-                                            <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
-                                            <AlertDialogAction onClick={handleConfirm} disabled={isLoading}>
-                                                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                                            <AlertDialogCancel disabled={buyLoadMutation.isPending}>Cancel</AlertDialogCancel>
+                                            <AlertDialogAction onClick={handleConfirm} disabled={buyLoadMutation.isPending}>
+                                                {buyLoadMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                                                 Confirm
                                             </AlertDialogAction>
                                         </AlertDialogFooter>

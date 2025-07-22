@@ -50,7 +50,7 @@ export default function PartnerKycPage() {
         { enabled: !!partnerId, queryKey: ['adminGetPartner', partnerId] }
     );
     
-    const { call: updatePartnerStatus, isLoading: isUpdatingStatus } = useApi('adminUpdatePartnerStatus');
+    const updatePartnerStatusMutation = useApi('adminUpdatePartnerStatus');
     
     // Create a memoized map of uploaded documents for efficient lookup
     const uploadedDocsMap = useMemo(() => {
@@ -64,7 +64,7 @@ export default function PartnerKycPage() {
     const handleUpdateStatus = async (status: 'VERIFIED' | 'ACTION_REQUIRED') => {
         const reason = status === 'ACTION_REQUIRED' ? 'Admin requested re-submission of documents.' : 'All documents verified.';
         
-        const result = await updatePartnerStatus({
+        const result = await updatePartnerStatusMutation.mutateAsync({
             partnerId,
             status,
             reason,
@@ -150,12 +150,12 @@ export default function PartnerKycPage() {
                 </CardContent>
                  <CardContent className="border-t pt-6">
                      <div className="flex justify-end gap-4">
-                        <Button variant="destructive" onClick={() => handleUpdateStatus('ACTION_REQUIRED')} disabled={isUpdatingStatus}>
-                           {isUpdatingStatus && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        <Button variant="destructive" onClick={() => handleUpdateStatus('ACTION_REQUIRED')} disabled={updatePartnerStatusMutation.isPending}>
+                           {updatePartnerStatusMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                            Request Re-submission
                         </Button>
-                        <Button onClick={() => handleUpdateStatus('VERIFIED')} disabled={isUpdatingStatus}>
-                             {isUpdatingStatus && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        <Button onClick={() => handleUpdateStatus('VERIFIED')} disabled={updatePartnerStatusMutation.isPending}>
+                             {updatePartnerStatusMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             Approve Business
                         </Button>
                     </div>

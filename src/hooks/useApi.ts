@@ -132,13 +132,12 @@ export function useApiQuery<TResponse = unknown>(
   const { user } = useAuth();
   const { toast } = useToast();
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ['api', action, payload],
     queryFn: async (): Promise<TResponse> => {
       if (!user) {
         throw new Error('User not authenticated');
       }
-      
       // Get fresh ID token
       const idToken = await user.getIdToken(true);
       return callDispatcher(action, payload || {}, idToken);
@@ -152,14 +151,18 @@ export function useApiQuery<TResponse = unknown>(
       // Retry other errors up to 2 times
       return failureCount < 2;
     },
-    onError: (error: Error) => {
-      console.error(`[useApiQuery] Error in ${action}:`, error);
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
     ...options,
   });
+
+  // Error handling (React Query v5+)
+  if (query.error) {
+    toast({
+      title: 'Error',
+      description: query.error.message,
+      variant: 'destructive',
+    });
+  }
+
+  return query;
 }
+

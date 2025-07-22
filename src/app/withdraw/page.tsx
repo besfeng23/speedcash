@@ -38,9 +38,9 @@ export default function WithdrawPage() {
     const router = useRouter();
     const { toast } = useToast();
     
-    const { call: initiateInstaPay, isLoading: isInstaPayLoading } = useApi("initiateInstaPayTransfer");
-    const { call: initiatePesoNet, isLoading: isPesoNetLoading } = useApi("initiatePesoNetTransfer");
-    const isLoading = isInstaPayLoading || isPesoNetLoading;
+    const initiateInstaPayMutation = useApi('initiateInstaPayTransfer');
+    const initiatePesoNetMutation = useApi('initiatePesoNetTransfer');
+    const isLoading = initiateInstaPayMutation.isPending || initiatePesoNetMutation.isPending;
 
 
     const handleNext = () => setStep(step + 1);
@@ -60,9 +60,9 @@ export default function WithdrawPage() {
 
         let result: any;
         if (transferMethod === 'instapay') {
-            result = await initiateInstaPay(payload);
+            result = await initiateInstaPayMutation.mutateAsync(payload);
         } else if (transferMethod === 'pesonet') {
-            result = await initiatePesoNet(payload);
+            result = await initiatePesoNetMutation.mutateAsync(payload);
         } else {
             toast({ title: "Error", description: "Invalid transfer method selected.", variant: "destructive" });
             return;

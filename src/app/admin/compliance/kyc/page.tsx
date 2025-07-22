@@ -70,14 +70,14 @@ export default function KycQueuePage() {
   const kycSubmissions = data?.submissions;
 
 
-  const { call: updateKycStatus, isLoading: isUpdatingStatus } = useApi('adminUpdateKycStatus');
-  const { call: addKycDocument, isLoading: isUploading } = useApi('addKycDocument');
-  const { call: deleteKycDocument, isLoading: isDeleting } = useApi('adminDeleteKycDocument');
+  const updateKycStatusMutation = useApi('adminUpdateKycStatus');
+  const addKycDocumentMutation = useApi('addKycDocument');
+  const deleteKycDocumentMutation = useApi('adminDeleteKycDocument');
 
 
   const handleApproveReject = async (id: string | undefined, status: 'VERIFIED' | 'REJECTED') => {
     if (!id) return;
-    const result = await updateKycStatus({ uid: id, status: status, rejectionReason: status === 'REJECTED' ? 'Documents unclear.' : undefined });
+    const result = await updateKycStatusMutation.mutateAsync({ uid: id, status: status, rejectionReason: status === 'REJECTED' ? 'Documents unclear.' : undefined });
     if((result as any)?.success) {
         toast({ title: "Status Updated", description: `The KYC status has been ${status.toLowerCase()}.` });
         queryClient.invalidateQueries({ queryKey: ['adminKycQueue'] });
@@ -118,7 +118,7 @@ export default function KycQueuePage() {
   const handleDeleteDocument = async (docUrl: string) => {
     if (!selectedSubmission) return;
     try {
-        await deleteKycDocument({ userId: selectedSubmission.subjectId, docUrl });
+        await deleteKycDocumentMutation.mutateAsync({ userId: selectedSubmission.subjectId, docUrl });
         toast({ title: "Document Deleted", description: "The document has been successfully removed." });
         queryClient.invalidateQueries({ queryKey: ['adminKycQueue'] });
 
@@ -135,7 +135,7 @@ export default function KycQueuePage() {
               await uploadBytes(storageRef, file);
               const downloadURL = await getDownloadURL(storageRef);
 
-              await addKycDocument({ userId: selectedSubmission.subjectId, docUrl: downloadURL });
+              await addKycDocumentMutation.mutateAsync({ userId: selectedSubmission.subjectId, docUrl: downloadURL });
 
               toast({ title: "Upload Complete", description: "New document has been added to the submission." });
               queryClient.invalidateQueries({ queryKey: ['adminKycQueue'] });
@@ -252,8 +252,8 @@ export default function KycQueuePage() {
                  <div className="flex items-center justify-between">
                     <h3 className="font-semibold">Uploaded Documents</h3>
                     <input type="file" ref={fileInputRef} className="hidden" onChange={handleFileUpload} accept="image/png, image/jpeg, application/pdf"/>
-                    <Button size="sm" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isUploading}>
-                        {isUploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Upload className="mr-2 h-4 w-4"/>}
+                    <Button size="sm" variant="outline" onClick={() => fileInputRef.current?.click()} disabled={addKycDocumentMutation.isPending}>
+                        {addKycDocumentMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Upload className="mr-2 h-4 w-4"/>}
                         Upload Document
                     </Button>
                  </div>
@@ -275,8 +275,8 @@ export default function KycQueuePage() {
                         </Button>
                          <AlertDialog>
                             <AlertDialogTrigger asChild>
-                                <Button size="sm" variant="destructive" className="w-full" disabled={isDeleting}>
-                                    {isDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Trash2 className="mr-2 h-4 w-4"/>}
+                                <Button size="sm" variant="destructive" className="w-full" disabled={deleteKycDocumentMutation.isPending}>
+                                    {deleteKycDocumentMutation.isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Trash2 className="mr-2 h-4 w-4"/>}
                                     Delete
                                 </Button>
                             </AlertDialogTrigger>
@@ -302,12 +302,12 @@ export default function KycQueuePage() {
               </div>
 
               <div className="flex justify-end gap-4 pt-4">
-                  <Button variant="destructive" onClick={() => handleApproveReject(selectedSubmission.id, 'REJECTED')} disabled={isUpdatingStatus || isAnalyzing}>
-                    {(isUpdatingStatus) && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                  <Button variant="destructive" onClick={() => handleApproveReject(selectedSubmission.id, 'REJECTED')} disabled={updateKycStatusMutation.isPending || isAnalyzing}>
+                    {(updateKycStatusMutation.isPending) && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                     Reject
                   </Button>
-                  <Button onClick={() => handleApproveReject(selectedSubmission.id, 'VERIFIED')} disabled={isUpdatingStatus || isAnalyzing}>
-                    {(isUpdatingStatus) && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                  <Button onClick={() => handleApproveReject(selectedSubmission.id, 'VERIFIED')} disabled={updateKycStatusMutation.isPending || isAnalyzing}>
+                    {(updateKycStatusMutation.isPending) && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                     Approve
                   </Button>
               </div>

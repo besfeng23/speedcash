@@ -37,11 +37,11 @@ export default function WithdrawalQueuePage() {
   
   const withdrawalRequests = response?.requests;
 
-  const { call: approveWithdrawal, isLoading: isApproving } = useApi("adminApproveWithdrawal");
-  const { call: rejectWithdrawal, isLoading: isRejecting } = useApi("adminRejectWithdrawal");
+  const approveWithdrawalMutation = useApi("adminApproveWithdrawal");
+  const rejectWithdrawalMutation = useApi("adminRejectWithdrawal");
 
   const handleApprove = async (transactionId: string) => {
-    const result = await approveWithdrawal({ transactionId });
+    const result = await approveWithdrawalMutation.mutateAsync({ transactionId });
     if ((result as any)?.success) {
       toast({ title: "Success", description: "Withdrawal has been approved and is processing." });
       queryClient.invalidateQueries({ queryKey: ["adminGetWithdrawalQueue"] });
@@ -50,7 +50,7 @@ export default function WithdrawalQueuePage() {
   };
 
   const handleReject = async (transactionId: string) => {
-    const result = await rejectWithdrawal({ transactionId, reason: "Admin rejection." });
+    const result = await rejectWithdrawalMutation.mutateAsync({ transactionId, reason: "Admin rejection." });
      if ((result as any)?.success) {
       toast({ title: "Success", description: "Withdrawal has been rejected and refunded." });
       queryClient.invalidateQueries({ queryKey: ["adminGetWithdrawalQueue"] });
@@ -58,7 +58,7 @@ export default function WithdrawalQueuePage() {
     }
   };
 
-  const isProcessing = isApproving || isRejecting;
+  const isProcessing = approveWithdrawalMutation.isPending || rejectWithdrawalMutation.isPending;
 
   return (
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6">
@@ -128,11 +128,11 @@ export default function WithdrawalQueuePage() {
                     <TableCell>{new Date(req.createdAt.seconds * 1000).toLocaleString()}</TableCell>
                     <TableCell className="text-right space-x-2">
                       <Button size="sm" variant="destructive" onClick={() => handleReject(req.id)} disabled={isProcessing}>
-                        {isRejecting && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                        {rejectWithdrawalMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                         Reject
                       </Button>
                       <Button size="sm" onClick={() => handleApprove(req.id)} disabled={isProcessing}>
-                        {isApproving && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                        {approveWithdrawalMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                         Approve
                       </Button>
                     </TableCell>

@@ -26,7 +26,7 @@ export function ChatAssistantWidget() {
   const { user, role } = useAuth();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   
-  const { call: askKai, isLoading: isPending } = useApi('cpayDispatcher');
+  const askKaiMutation = useApi('cpayDispatcher');
 
   useEffect(() => {
     if (isOpen && user) {
@@ -54,12 +54,12 @@ export function ChatAssistantWidget() {
         viewport.scrollTop = viewport.scrollHeight;
       }
     }
-  }, [messages, isPending]);
+  }, [messages, askKaiMutation.isPending]);
 
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || isPending) return;
+    if (!input.trim() || askKaiMutation.isPending) return;
     
     const userMessage: Message = { sender: 'USER', text: input };
     const currentMessages = [...messages, userMessage];
@@ -68,7 +68,7 @@ export function ChatAssistantWidget() {
     const currentInput = input;
     setInput('');
 
-    const response = await askKai({
+    const response = await askKaiMutation.mutateAsync({
         action: 'askAuthenticatedKai',
         payload: {
             query: currentInput,
@@ -133,7 +133,7 @@ export function ChatAssistantWidget() {
                             </div>
                         </div>
                     ))}
-                    {isPending && (
+                    {askKaiMutation.isPending && (
                         <div className="flex items-start gap-2">
                              <Bot className="h-6 w-6 self-start text-primary flex-shrink-0"/>
                             <div className="bg-muted rounded-lg px-3 py-2 flex items-center">
@@ -147,7 +147,7 @@ export function ChatAssistantWidget() {
             <CardFooter className="p-4 border-t">
                 <form onSubmit={handleSend} className="flex w-full items-center gap-2">
                     <Input value={input} onChange={(e) => setInput(e.target.value)} placeholder="Ask something..." autoComplete="off"/>
-                    <Button type="submit" size="icon" disabled={isPending || !input.trim()}>
+                    <Button type="submit" size="icon" disabled={askKaiMutation.isPending || !input.trim()}>
                         <Send />
                         <span className="sr-only">Send</span>
                     </Button>

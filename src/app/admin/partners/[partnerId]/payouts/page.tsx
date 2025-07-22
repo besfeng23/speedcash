@@ -34,7 +34,7 @@ export default function PartnerPayoutsPage() {
     const partnerId = params.partnerId as string;
     const { toast } = useToast();
 
-    const { call: initiateTestPayout, isLoading } = useApi('partnerInitiateTestPayout');
+    const initiateTestPayoutMutation = useApi('partnerInitiateTestPayout');
 
     const handleTestPayout = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -44,7 +44,7 @@ export default function PartnerPayoutsPage() {
         const accountNumber = formData.get('accountNumber') as string;
         const accountName = formData.get('accountName') as string;
         
-        const result = await initiateTestPayout({
+        const result = await initiateTestPayoutMutation.mutateAsync({
             partnerId, amount, channel, accountNumber, accountName
         });
         
@@ -101,8 +101,8 @@ export default function PartnerPayoutsPage() {
                                <Label htmlFor="accountName">Recipient Name</Label>
                                <Input id="accountName" name="accountName" defaultValue="Juan dela Cruz" required/>
                             </div>
-                            <Button className="w-full" type="submit" disabled={isLoading}>
-                                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                            <Button className="w-full" type="submit" disabled={initiateTestPayoutMutation.isPending}>
+                                {initiateTestPayoutMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                                 Submit Test Payout
                             </Button>
                         </form>

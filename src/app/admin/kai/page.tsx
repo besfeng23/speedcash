@@ -27,11 +27,11 @@ export default function SuperadminKaiPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [prompt, setPrompt] = useState('');
 
-  const { call: askAuthenticatedKai, isLoading } = useApi<{ reply: string }>('askAuthenticatedKai');
+  const askAuthenticatedKaiMutation = useApi<{ reply: string }>('askAuthenticatedKai');
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!prompt.trim() || isLoading) return;
+    if (!prompt.trim() || askAuthenticatedKaiMutation.isPending) return;
 
     const userMessage: Message = { sender: 'USER', text: prompt };
     const conversationHistory = [...messages, userMessage];
@@ -39,7 +39,7 @@ export default function SuperadminKaiPage() {
     setMessages(conversationHistory);
     setPrompt('');
 
-    const response = await askAuthenticatedKai({ 
+    const response = await askAuthenticatedKaiMutation.mutateAsync({ 
       query: prompt, 
       conversationHistory: messages // Send previous messages for context
     });
@@ -103,7 +103,7 @@ export default function SuperadminKaiPage() {
                                 </div>
                             </div>
                         ))}
-                         {isLoading && (
+                         {askAuthenticatedKaiMutation.isPending && (
                             <div className="flex items-start gap-3">
                                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary">
                                     <Bot className="h-5 w-5 text-primary"/>
@@ -134,7 +134,7 @@ export default function SuperadminKaiPage() {
                                     }
                                 }}
                             />
-                            <Button type="submit" size="icon" disabled={isLoading || !prompt}>
+                            <Button type="submit" size="icon" disabled={askAuthenticatedKaiMutation.isPending || !prompt}>
                                 <Send />
                                 <span className="sr-only">Send</span>
                             </Button>

@@ -53,7 +53,7 @@ export default function AiTicketsPage() {
   }, [data, selectedTicket]);
 
   const tickets = data?.tickets;
-  const { call: updateTicket, isLoading: isUpdating } = useApi('adminUpdateSupportTicket');
+  const updateTicketMutation = useApi('adminUpdateSupportTicket');
   const [resolutionNotes, setResolutionNotes] = useState("");
 
   useEffect(() => {
@@ -64,7 +64,7 @@ export default function AiTicketsPage() {
 
 
   const handleStatusChange = async (ticketId: string, status: string) => {
-    const result = await updateTicket({ ticketId, status });
+    const result = await updateTicketMutation.mutateAsync({ ticketId, status });
     if((result as any)?.success) {
         toast({ title: "Status Updated", description: "The ticket status has been changed." });
         queryClient.invalidateQueries({ queryKey: ['adminTickets', statusFilter] });
@@ -73,7 +73,7 @@ export default function AiTicketsPage() {
 
   const handleSaveChanges = async () => {
     if (!selectedTicket) return;
-    const result = await updateTicket({ 
+    const result = await updateTicketMutation.mutateAsync({ 
         ticketId: selectedTicket.id, 
         resolutionNotes: resolutionNotes 
     });
@@ -197,7 +197,7 @@ export default function AiTicketsPage() {
                         {/* TODO: Import Label component */}
                         <div className="text-sm font-medium">Ticket Management</div>
                         <div className="flex gap-4">
-                             <Select defaultValue={selectedTicket.status} onValueChange={(value) => handleStatusChange(selectedTicket.id, value)} disabled={isUpdating}>
+                             <Select defaultValue={selectedTicket.status} onValueChange={(value) => handleStatusChange(selectedTicket.id, value)} disabled={updateTicketMutation.isPending}>
                                 <SelectTrigger>
                                     <SelectValue placeholder="Change status..." />
                                 </SelectTrigger>
@@ -219,8 +219,8 @@ export default function AiTicketsPage() {
                             value={resolutionNotes}
                             onChange={(e) => setResolutionNotes(e.target.value)}
                         />
-                        <Button className="w-full" disabled={isUpdating} onClick={handleSaveChanges}>
-                             {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                        <Button className="w-full" disabled={updateTicketMutation.isPending} onClick={handleSaveChanges}>
+                             {updateTicketMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                             Save Notes
                         </Button>
                     </div>

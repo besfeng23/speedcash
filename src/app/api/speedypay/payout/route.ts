@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
 
     // 🔐 Generate signature
     const signature = generateSpeedyPaySignature(payload, SPEEDYPAY_CONFIG.secretKey);
-    payload.sign = signature;
+    (payload as any).sign = signature;
 
     // 🚀 Send request to SpeedyPay
     const baseUrl = process.env.NODE_ENV === 'production' 

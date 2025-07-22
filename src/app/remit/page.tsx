@@ -39,7 +39,7 @@ export default function RemitPage() {
 
     const krwAmount = (parseFloat(phpAmount) || 0) * 45.50; // Example static rate
 
-    const { call: callInitiateRemittance, isLoading: isSending } = useApi("initiateRemittance");
+    const callInitiateRemittanceMutation = useApi('initiateRemittance');
     const { data: transactions } = useApiQuery<{ transactions: Transaction[] }>(
         'getTransactionHistory',
         undefined,
@@ -73,7 +73,7 @@ export default function RemitPage() {
     const handleConfirmSend = async () => {
         if (!recipientDetails || !phpAmount) return;
 
-        const result = await callInitiateRemittance({
+        const result = await callInitiateRemittanceMutation.mutateAsync({
             amount: parseFloat(phpAmount),
             recipientDetails: recipientDetails,
         });
@@ -208,9 +208,9 @@ export default function RemitPage() {
                                    </div>
                                </div>
                                 <div className="flex gap-4">
-                                    <Button variant="outline" className="w-full" onClick={() => setStep(2)} disabled={isSending}>Back</Button>
-                                    <Button className="w-full" size="lg" onClick={handleConfirmSend} disabled={isSending}>
-                                        {isSending && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                                    <Button variant="outline" className="w-full" onClick={() => setStep(2)} disabled={callInitiateRemittanceMutation.isPending}>Back</Button>
+                                    <Button className="w-full" size="lg" onClick={handleConfirmSend} disabled={callInitiateRemittanceMutation.isPending}>
+                                        {callInitiateRemittanceMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                                         Confirm & Send
                                     </Button>
                                 </div>

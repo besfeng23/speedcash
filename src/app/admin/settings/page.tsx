@@ -35,7 +35,7 @@ export default function SettingsPage() {
   const [partnerPrimaryColor, setPartnerPrimaryColor] = useState('#DAA520');
   const [partnerAccentColor, setPartnerAccentColor] = useState('#FFFFFF');
   
-  const { call: updateSettings, isLoading: isSaving } = useApi("adminUpdatePlatformSettings");
+  const updateSettingsMutation = useApi('adminUpdatePlatformSettings');
 
   useEffect(() => {
     // This effect applies the global theme color changes instantly for preview
@@ -69,7 +69,7 @@ export default function SettingsPage() {
 
   const handleSaveChanges = async () => {
     // In a real app, the logo would be uploaded first to get a persistent URL.
-    const result = await updateSettings({
+    const result = await updateSettingsMutation.mutateAsync({
         appName,
         logoUrl: 'https://placehold.co/128x32.png', // Using placeholder as we don't have real upload
         primaryColor,
@@ -101,8 +101,8 @@ export default function SettingsPage() {
     <div className="flex-1 space-y-6 p-4 md:p-8 pt-6">
       <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-2">
         <h2 className="font-headline text-3xl font-bold tracking-tight">Platform Settings</h2>
-        <Button onClick={handleSaveChanges} disabled={isSaving}>
-            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+        <Button onClick={handleSaveChanges} disabled={updateSettingsMutation.isPending}>
+            {updateSettingsMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
             Save All Changes
         </Button>
       </div>

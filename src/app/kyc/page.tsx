@@ -42,7 +42,7 @@ export default function KycPage() {
         },
     });
     
-    const { call: submitKyc, isLoading: isSubmitting } = useApi('submitKyc');
+    const submitKycMutation = useApi('submitKyc');
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files[0] && user) {
@@ -79,7 +79,7 @@ export default function KycPage() {
             return;
         }
 
-        const result = await submitKyc({
+        const result = await submitKycMutation.mutateAsync({
             ...data,
             documentUrls: [documentUrl],
         });
@@ -197,9 +197,9 @@ export default function KycPage() {
                                             <p className="text-sm font-medium text-destructive">{form.formState.errors.root.message}</p>
                                         )}
                                         <div className="flex gap-4 pt-2">
-                                            <Button variant="outline" className="w-full" onClick={() => setStep(1)} disabled={isSubmitting}>Back</Button>
-                                            <Button type="submit" className="w-full" disabled={!documentUrl || isSubmitting}>
-                                                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                                            <Button variant="outline" className="w-full" onClick={() => setStep(1)} disabled={submitKycMutation.isPending}>Back</Button>
+                                            <Button type="submit" className="w-full" disabled={!documentUrl || submitKycMutation.isPending}>
+                                                {submitKycMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                                                 Submit for Review
                                             </Button>
                                         </div>

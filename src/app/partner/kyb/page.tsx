@@ -46,7 +46,7 @@ export default function PartnerKybPage() {
         { enabled: !!user, queryKey: ['partnerGetProfile'] }
     );
     
-    const { call: submitDocument, isLoading: isSubmitting } = useApi('partnerSubmitKybDocument');
+    const submitDocumentMutation = useApi('partnerSubmitKybDocument');
 
     const uploadedDocsMap = useMemo(() => {
         const map = new Map<string, KybDocument>();
@@ -67,7 +67,7 @@ export default function PartnerKybPage() {
             await uploadBytes(storageRef, file);
             const downloadURL = await getDownloadURL(storageRef);
             
-            await submitDocument({
+            await submitDocumentMutation.mutateAsync({
                 docId: docId,
                 docType: docName,
                 url: downloadURL,

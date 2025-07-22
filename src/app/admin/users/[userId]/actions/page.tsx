@@ -21,12 +21,10 @@ export default function UserActionsPage() {
   const queryClient = useQueryClient();
   const [note, setNote] = useState('');
 
-  const { call: suspendUser, isLoading: isSuspending } = useApi<{ success: boolean }>(
-    'adminSuspendUser'
-  );
+  const suspendUserMutation = useApi<{ success: boolean }>('adminSuspendUser');
 
   const handleSuspend = async () => {
-    const result = await suspendUser({ uid: userId, suspend: true });
+    const result = await suspendUserMutation.mutateAsync({ uid: userId, suspend: true });
     if (result?.success) {
       toast({
         title: "User Suspended",
@@ -38,7 +36,7 @@ export default function UserActionsPage() {
   };
   
   const handleUnsuspend = async () => {
-    const result = await suspendUser({ uid: userId, suspend: false });
+    const result = await suspendUserMutation.mutateAsync({ uid: userId, suspend: false });
     if (result?.success) {
       toast({
         title: "User Unsuspended",
@@ -87,8 +85,8 @@ export default function UserActionsPage() {
                             <h4 className="font-semibold text-destructive">Suspend User</h4>
                             <p className="text-sm text-destructive/80">This will disable the user's ability to log in or transact.</p>
                         </div>
-                         <Button variant="destructive" onClick={handleSuspend} disabled={isSuspending}>
-                             {isSuspending && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                         <Button variant="destructive" onClick={handleSuspend} disabled={suspendUserMutation.isPending}>
+                             {suspendUserMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                             Suspend
                         </Button>
                     </div>
@@ -99,8 +97,8 @@ export default function UserActionsPage() {
                             <h4 className="font-semibold">Unsuspend User</h4>
                             <p className="text-sm text-muted-foreground">Re-enable the user's account.</p>
                         </div>
-                         <Button variant="secondary" onClick={handleUnsuspend} disabled={isSuspending}>
-                              {isSuspending && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
+                         <Button variant="secondary" onClick={handleUnsuspend} disabled={suspendUserMutation.isPending}>
+                              {suspendUserMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
                             Unsuspend
                         </Button>
                     </div>
