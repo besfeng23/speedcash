@@ -77,8 +77,8 @@ export function ChatAssistantWidget() {
         }
     });
     
-    if (response) {
-      setMessages(prev => [...prev, { sender: 'AI', text: (response as any).reply }]);
+    if (response && typeof response === 'object' && 'reply' in response) {
+      setMessages(prev => [...prev, { sender: 'AI', text: (response as { reply: string }).reply }]);
     }
   };
 
