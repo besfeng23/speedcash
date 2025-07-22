@@ -20,7 +20,16 @@ type Transaction = {
   userId: string;
   senderInfo?: { uid: string };
   receiverInfo?: { uid: string };
-  details?: any;
+  details?: {
+    senderName?: string;
+    recipientName?: string;
+    method?: string;
+    bankDetails?: {
+      bankCode?: string;
+      accountName?: string;
+    };
+    [key: string]: unknown;
+  };
 };
 
 const getTransactionIcon = (type: string) => {
@@ -47,16 +56,16 @@ const formatTransactionTitle = (tx: Transaction, currentUid: string) => {
   }
 };
 
-const formatTransactionTarget = (tx: Transaction, currentUid: string) => {
+const formatTransactionTarget = (tx: Transaction, currentUid: string): string => {
   const isSender = tx.senderInfo?.uid === currentUid;
    switch (tx.type) {
     case 'p2p_transfer':
       if (isSender) {
-          return tx.details?.receiverName ? tx.details.receiverName : `User ${tx.receiverInfo?.uid?.substring(0, 5)}...`
+          return String(tx.details?.receiverName || `User ${tx.receiverInfo?.uid?.substring(0, 5)}...`)
       }
-      return tx.details?.senderName ? tx.details.senderName : `User ${tx.senderInfo?.uid?.substring(0, 5)}...`
+      return String(tx.details?.senderName || `User ${tx.senderInfo?.uid?.substring(0, 5)}...`)
     default:
-      return tx.details?.recipientName || tx.details?.bankDetails?.accountName || 'External Account';
+      return String(tx.details?.recipientName || tx.details?.bankDetails?.accountName || 'External Account');
   }
 };
 

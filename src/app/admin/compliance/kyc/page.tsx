@@ -85,7 +85,7 @@ export default function KycQueuePage() {
   const handleApproveReject = async (id: string | undefined, status: 'VERIFIED' | 'REJECTED') => {
     if (!id) return;
     const result = await updateKycStatus({ uid: id, status: status, rejectionReason: status === 'REJECTED' ? 'Documents unclear.' : undefined });
-    if((result as any)?.success) {
+    if(result && typeof result === 'object' && 'success' in result && result.success) {
         toast({ title: "Status Updated", description: `The KYC status has been ${status.toLowerCase()}.` });
         queryClient.invalidateQueries({ queryKey: ['adminKycQueue'] });
         queryClient.invalidateQueries({ queryKey: ['adminGetDashboardStats'] });
@@ -247,7 +247,7 @@ export default function KycQueuePage() {
                     </div>
                   ) : (
                      <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-                      <p>Click "Analyze with AI" on a document to see results here.</p>
+                      <p>Click &quot;Analyze with AI&quot; on a document to see results here.</p>
                     </div>
                   )}
                 </div>

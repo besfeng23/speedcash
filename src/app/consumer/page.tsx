@@ -49,7 +49,7 @@ const formatNotificationDescription = (tx: Transaction) => {
         case 'cash_in': return `You have successfully cashed in ₱${tx.amount.toFixed(2)}.`;
         case 'cash_out': return `Your withdrawal of ₱${tx.amount.toFixed(2)} is complete.`;
         case 'remittance': return `Your remittance of ₱${tx.amount.toFixed(2)} has been sent.`;
-        default: `Transaction ID: ${tx.id.substring(0, 7)}...`;
+        default: return `Transaction ID: ${tx.id.substring(0, 7)}...`;
     }
     return `Transaction for ₱${tx.amount.toFixed(2)} completed.`;
 }

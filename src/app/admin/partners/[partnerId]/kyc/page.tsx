@@ -56,7 +56,7 @@ export default function PartnerKycPage() {
     const uploadedDocsMap = useMemo(() => {
         const map = new Map<string, KybDocument>();
         if (partner?.kybDocuments) {
-            partner.kybDocuments.forEach((doc: any) => map.set(doc.id, doc));
+            partner.kybDocuments.forEach((doc: KybDocument) => map.set(doc.id, doc));
         }
         return map;
     }, [partner?.kybDocuments]);
@@ -70,7 +70,7 @@ export default function PartnerKycPage() {
             reason,
         });
 
-        if ((result as any)?.success) {
+        if (result && typeof result === 'object' && 'success' in result && result.success) {
             toast({
                 title: "Partner Status Updated",
                 description: `The partner has been marked as ${status === 'VERIFIED' ? 'Verified' : 'Action Required'}.`,

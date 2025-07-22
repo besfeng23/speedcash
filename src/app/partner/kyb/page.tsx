@@ -51,7 +51,7 @@ export default function PartnerKybPage() {
     const uploadedDocsMap = useMemo(() => {
         const map = new Map<string, KybDocument>();
         if (partner?.kybDocuments) {
-            partner.kybDocuments.forEach((doc: any) => map.set(doc.id, doc));
+            partner.kybDocuments.forEach((doc: KybDocument) => map.set(doc.id, doc));
         }
         return map;
     }, [partner?.kybDocuments]);

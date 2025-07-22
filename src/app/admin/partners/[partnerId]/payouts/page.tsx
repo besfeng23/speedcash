@@ -48,20 +48,23 @@ export default function PartnerPayoutsPage() {
             partnerId, amount, channel, accountNumber, accountName
         });
         
+        const isSuccess = result && typeof result === 'object' && 'success' in result && result.success;
+        const resultData = result as { success?: boolean; response?: string; message?: string };
+        
         const newPayout: TestPayout = {
             id: `tp_${Date.now()}`,
             ts: new Date().toLocaleString(),
             amount: `₱${amount.toFixed(2)}`,
-            status: (result as any)?.success ? 'SUCCESS' : 'FAILED',
-            response: (result as any)?.response || 'Error'
+            status: isSuccess ? 'SUCCESS' : 'FAILED',
+            response: resultData?.response || 'Error'
         };
 
         setTestPayouts(prev => [newPayout, ...prev]);
 
         toast({
-            title: (result as any)?.success ? "Test Payout Submitted" : "Test Payout Failed",
-            description: (result as any)?.message || "An unexpected error occurred.",
-            variant: (result as any)?.success ? "default" : "destructive"
+            title: isSuccess ? "Test Payout Submitted" : "Test Payout Failed",
+            description: resultData?.message || "An unexpected error occurred.",
+            variant: isSuccess ? "default" : "destructive"
         });
 
     }

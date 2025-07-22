@@ -104,10 +104,10 @@ export default function AdminDashboard() {
           </>
         ) : (
           <>
-            <KpiCard title="Pending KYC Submissions" value={dashboardStats?.pendingKyc ?? 0} icon={FileCheck2} details="Actionable queue for compliance" />
-            <KpiCard title="Pending Withdrawals" value={dashboardStats?.pendingWithdrawals ?? 0} icon={Hourglass} details="Awaiting approval" />
-            <KpiCard title="New Users (24h)" value={`+${dashboardStats?.newUsers24h ?? 0}`} icon={UserPlus} details="Platform growth indicator" />
-            <KpiCard title="Total Txn Volume (24h)" value={`₱${(dashboardStats?.totalTxnVolume24h ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`} icon={BarChart} details="Overall platform health" />
+            <KpiCard title="Pending KYC Submissions" value={dashboardStats?.pendingKycCount ?? 0} icon={FileCheck2} details="Actionable queue for compliance" />
+            <KpiCard title="Pending Withdrawals" value={dashboardStats?.pendingWithdrawalCount ?? 0} icon={Hourglass} details="Awaiting approval" />
+            <KpiCard title="New Users (24h)" value={`+${dashboardStats?.newUsersToday ?? 0}`} icon={UserPlus} details="Platform growth indicator" />
+            <KpiCard title="Total Txn Volume (24h)" value={`₱${(dashboardStats?.totalVolumeToday ?? 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}`} icon={BarChart} details="Overall platform health" />
           </>
         )}
       </div>
@@ -166,8 +166,8 @@ export default function AdminDashboard() {
                 <CardDescription>Tasks requiring immediate attention.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-                <ActionableQueueCard title="KYC/KYB Review" value={dashboardStats?.pendingKyc ?? 0} icon={FileCheck2} href="/admin/compliance/kyc" isLoading={statsLoading} />
-                <ActionableQueueCard title="Withdrawal Requests" value={dashboardStats?.pendingWithdrawals ?? 0} icon={Banknote} href="/admin/compliance/withdrawals" isLoading={statsLoading} />
+                <ActionableQueueCard title="KYC/KYB Review" value={dashboardStats?.pendingKycCount ?? 0} icon={FileCheck2} href="/admin/compliance/kyc" isLoading={statsLoading} />
+                <ActionableQueueCard title="Withdrawal Requests" value={dashboardStats?.pendingWithdrawalCount ?? 0} icon={Banknote} href="/admin/compliance/withdrawals" isLoading={statsLoading} />
                  <div className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
                     <div className="flex items-center gap-4">
                         <ShieldAlert className="w-6 h-6 text-destructive"/>

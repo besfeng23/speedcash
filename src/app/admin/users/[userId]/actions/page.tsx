@@ -85,7 +85,7 @@ export default function UserActionsPage() {
                     <div className="flex items-center justify-between">
                         <div>
                             <h4 className="font-semibold text-destructive">Suspend User</h4>
-                            <p className="text-sm text-destructive/80">This will disable the user's ability to log in or transact.</p>
+                            <p className="text-sm text-destructive/80">This will disable the user&apos;s ability to log in or transact.</p>
                         </div>
                          <Button variant="destructive" onClick={handleSuspend} disabled={isSuspending}>
                              {isSuspending && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}
@@ -97,7 +97,7 @@ export default function UserActionsPage() {
                     <div className="flex items-center justify-between">
                         <div>
                             <h4 className="font-semibold">Unsuspend User</h4>
-                            <p className="text-sm text-muted-foreground">Re-enable the user's account.</p>
+                            <p className="text-sm text-muted-foreground">Re-enable the user&apos;s account.</p>
                         </div>
                          <Button variant="secondary" onClick={handleUnsuspend} disabled={isSuspending}>
                               {isSuspending && <Loader2 className="mr-2 h-4 w-4 animate-spin"/>}

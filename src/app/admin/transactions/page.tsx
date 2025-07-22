@@ -61,7 +61,7 @@ export default function TransactionManagementPage() {
 
   const downloadCSV = () => {
     const headers = ["Transaction ID", "Type", "Status", "Amount", "Currency", "From User", "To User", "Date"];
-    const rows = filteredTransactions.map((tx: any) => [
+    const rows = filteredTransactions.map((tx: Transaction) => [
       `"${tx.id}"`,
       `"${tx.type}"`,
       `"${tx.status}"`,

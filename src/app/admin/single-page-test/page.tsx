@@ -57,7 +57,7 @@ export default function SinglePageAdminTest() {
             <ShieldAlert className="h-4 w-4" />
             <AlertTitle>Access Denied</AlertTitle>
             <AlertDescription>
-              The admin dashboard is not rendered because your role is not 'admin' or 'superadmin'.
+              The admin dashboard is not rendered because your role is not &apos;admin&apos; or &apos;superadmin&apos;.
             </AlertDescription>
           </Alert>
         )}

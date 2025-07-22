@@ -60,12 +60,12 @@ export default function SignupPage() {
       
       router.push('/consumer');
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Signup failed:", error);
       toast({
         variant: "destructive",
         title: "Signup Failed",
-        description: error.message,
+        description: error instanceof Error ? error.message : 'An unexpected error occurred',
       });
     } finally {
       setIsLoading(false);

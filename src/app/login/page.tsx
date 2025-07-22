@@ -45,12 +45,12 @@ export default function LoginPage() {
         router.push('/consumer');
       }
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Login failed:", error);
       toast({
         variant: "destructive",
         title: "Login Failed",
-        description: error.message,
+        description: error instanceof Error ? error.message : 'An unexpected error occurred',
       });
       setIsLoading(false); // Only set loading to false on error
     }
@@ -116,7 +116,7 @@ export default function LoginPage() {
                 </Link>
             </p>
              <p className="text-center text-xs text-muted-foreground pt-4">
-                Use 'jovenongz@gmail.com' (superadmin), 'winny@redapplex.com' (admin), 'partner@cpay.com', or 'user@cpay.com' with password 'password123' to test roles.
+                Use &apos;jovenongz@gmail.com&apos; (superadmin), &apos;winny@redapplex.com&apos; (admin), &apos;partner@cpay.com&apos;, or &apos;user@cpay.com&apos; with password &apos;password123&apos; to test roles.
             </p>
           </form>
         </CardContent>

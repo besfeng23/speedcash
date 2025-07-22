@@ -65,7 +65,7 @@ export default function AiTicketsPage() {
 
   const handleStatusChange = async (ticketId: string, status: string) => {
     const result = await updateTicket({ ticketId, status });
-    if((result as any)?.success) {
+    if(result && typeof result === 'object' && 'success' in result && result.success) {
         toast({ title: "Status Updated", description: "The ticket status has been changed." });
         queryClient.invalidateQueries({ queryKey: ['adminTickets', statusFilter] });
     }
@@ -77,7 +77,7 @@ export default function AiTicketsPage() {
         ticketId: selectedTicket.id, 
         resolutionNotes: resolutionNotes 
     });
-    if ((result as any)?.success) {
+    if (result && typeof result === 'object' && 'success' in result && result.success) {
       toast({ title: "Changes Saved", description: "The ticket has been updated." });
       queryClient.invalidateQueries({ queryKey: ['adminTickets', statusFilter] });
     }

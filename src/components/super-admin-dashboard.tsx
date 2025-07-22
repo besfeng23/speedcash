@@ -19,7 +19,12 @@ const recentActivities = [
 ];
 
 export function SuperAdminDashboard() {
-  const { data: stats, isLoading } = useApiQuery<any>(
+  const { data: stats, isLoading } = useApiQuery<{
+    pendingKycCount?: number;
+    pendingWithdrawalCount?: number;
+    newUsersToday?: number;
+    totalVolumeToday?: number;
+  }>(
       'adminGetDashboardStats', 
       undefined,
       { staleTime: 300000, queryKey: ['adminGetDashboardStats'] } // Cache for 5 minutes
@@ -43,10 +48,10 @@ export function SuperAdminDashboard() {
             </>
             ) : (
             <>
-                <KpiCard title="Pending KYC" value={stats?.pendingKyc ?? 0} icon={FileCheck2} />
-                <KpiCard title="Pending Withdrawals" value={stats?.pendingWithdrawals ?? 0} icon={Hourglass} />
-                <KpiCard title="New Users (24h)" value={`+${stats?.newUsers24h ?? 0}`} icon={UserPlus} />
-                <KpiCard title="Txn Volume (24h)" value={`₱${(stats?.totalTxnVolume24h ?? 0).toLocaleString()}`} icon={BarChart} />
+                <KpiCard title="Pending KYC" value={stats?.pendingKycCount ?? 0} icon={FileCheck2} />
+                <KpiCard title="Pending Withdrawals" value={stats?.pendingWithdrawalCount ?? 0} icon={Hourglass} />
+                <KpiCard title="New Users (24h)" value={`+${stats?.newUsersToday ?? 0}`} icon={UserPlus} />
+                <KpiCard title="Txn Volume (24h)" value={`₱${(stats?.totalVolumeToday ?? 0).toLocaleString()}`} icon={BarChart} />
             </>
             )}
         </div>
@@ -72,7 +77,7 @@ export function SuperAdminDashboard() {
                         <TableRow key={index}>
                             <TableCell className="font-medium">{activity.admin}</TableCell>
                             <TableCell>
-                            <Badge variant={activity.variant as any || 'default'}>{activity.action}</Badge>
+                            <Badge variant={(activity.variant as 'default' | 'secondary' | 'destructive' | 'outline') || 'default'}>{activity.action}</Badge>
                             </TableCell>
                             <TableCell className="text-right text-muted-foreground">{activity.timestamp}</TableCell>
                         </TableRow>
@@ -93,7 +98,7 @@ export function SuperAdminDashboard() {
                             <FileCheck2 className="w-6 h-6 text-primary"/>
                             <div>
                                 <p className="font-semibold text-foreground">KYC/KYB Review</p>
-                                <p className="text-sm text-muted-foreground">{isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : `${stats?.pendingKyc ?? 0} pending`}</p>
+                                <p className="text-sm text-muted-foreground">{isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : `${stats?.pendingKycCount ?? 0} pending`}</p>
                             </div>
                         </div>
                         <Button size="sm" asChild><Link href="/admin/compliance/kyc">Review</Link></Button>
@@ -103,7 +108,7 @@ export function SuperAdminDashboard() {
                             <Banknote className="w-6 h-6 text-green-600"/>
                             <div>
                                 <p className="font-semibold text-foreground">Withdrawal Requests</p>
-                                <p className="text-sm text-muted-foreground">{isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : `${stats?.pendingWithdrawals ?? 0} pending`}</p>
+                                <p className="text-sm text-muted-foreground">{isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : `${stats?.pendingWithdrawalCount ?? 0} pending`}</p>
                             </div>
                         </div>
                         <Button size="sm" asChild><Link href="/admin/compliance/withdrawals">Approve</Link></Button>

@@ -38,7 +38,7 @@ export default function HelpSupportPage() {
             </CardHeader>
             <CardContent>
               <p className="text-sm">
-                Have a question about a transaction, your balance, or how to use a feature? Just ask Kai. If it can't help, it will create a support ticket for our team.
+                Have a question about a transaction, your balance, or how to use a feature? Just ask Kai. If it can&apos;t help, it will create a support ticket for our team.
               </p>
                {/* The ChatAssistantWidget is already in layout, so no need to add it here. We just guide the user to it. */}
                <Button variant="secondary" className="mt-4 w-full">Chat with Kai</Button>
