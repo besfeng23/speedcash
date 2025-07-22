@@ -35,8 +35,7 @@ firebase-debug.log
 firebase-debug.*.log
 
 # environment variables
-.env
-.env*.local
+
 
 #functions
 /functions/lib

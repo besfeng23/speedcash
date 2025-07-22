@@ -14,7 +14,7 @@ export const ai = {
       }
     };
   },
-  defineFlow: (config: any, handler: any) => handler,
-  defineTool: (config: any, handler: any) => handler,
-  definePrompt: (config: any) => async (input: any) => ({ output: 'Placeholder prompt response' })
+  defineFlow: (_config: any, handler: any) => handler,
+  defineTool: (_config: any, handler: any) => handler,
+  definePrompt: (_config: any) => async (_input: any) => ({ output: 'Placeholder prompt response' })
 };

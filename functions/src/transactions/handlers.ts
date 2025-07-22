@@ -93,20 +93,56 @@ export async function initiateP2PTransferHandler(data: any, context: any) {
 }
 
 export async function initiateCashInHandler(data: any, context: any) {
-    if (!context.auth) throw new HttpsError('unauthenticated', 'Authentication required.');
-    const { amount, currency, method, referenceId } = cashInSchema.parse(data);
-    const uid = context.auth.uid;
+    if (!context.auth) {
+        throw new HttpsError('unauthenticated', 'Authentication required.');
+    }
+    
+    try {
+        const { amount, currency, method, referenceId } = cashInSchema.parse(data);
+        const uid = context.auth.uid;
 
-    await db.doc(`users/${uid}/wallets/${currency}`).update({ balance: admin.firestore.FieldValue.increment(amount) });
-    const transactionRef = db.collection('transactions').doc();
-    await transactionRef.set({
-        type: 'cash_in', status: 'COMPLETED', amount, currency,
-        receiverInfo: { uid }, details: { method, referenceId },
-        timestamp: admin.firestore.FieldValue.serverTimestamp(),
-        userIds: [uid]
-    });
+        // Validate amount
+        if (amount <= 0) {
+            throw new HttpsError('invalid-argument', 'Amount must be greater than zero');
+        }
 
-    return { success: true, message: 'Cash-in credited successfully.', transactionId: transactionRef.id };
+        // Validate currency
+        if (!['PHP', 'KRW'].includes(currency)) {
+            throw new HttpsError('invalid-argument', 'Invalid currency specified');
+        }
+
+        const walletRef = db.doc(`users/${uid}/wallets/${currency}`);
+        const transactionRef = db.collection('transactions').doc();
+
+        await db.runTransaction(async (tx) => {
+            // Update wallet balance
+            tx.update(walletRef, { 
+                balance: admin.firestore.FieldValue.increment(amount),
+                updatedAt: admin.firestore.FieldValue.serverTimestamp()
+            });
+
+            // Record transaction
+            tx.set(transactionRef, {
+                type: 'cash_in',
+                status: 'COMPLETED',
+                amount,
+                currency,
+                method,
+                referenceId,
+                userIds: [uid],
+                timestamp: admin.firestore.FieldValue.serverTimestamp(),
+            });
+        });
+
+        await auditLog({ uid }, 'CASH_IN_SUCCESS', { amount, currency, method, referenceId });
+        return { success: true, transactionId: transactionRef.id };
+    } catch (error) {
+        if (error instanceof HttpsError) {
+            throw error;
+        }
+        console.error('Cash-in error:', error);
+        throw new HttpsError('internal', 'Failed to process cash-in transaction');
+    }
 }
 
 export async function initiateCashOutHandler(data: any, context: any) {

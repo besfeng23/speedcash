@@ -50,7 +50,7 @@ export async function loadMemory(userId: string, role: string): Promise<string> 
  * @param userId The ID of the user.
  * @param summary A short summary of the interaction.
  */
-export async function addMemory(userId: string, summary: string): Promise<void> {
+export async function addMemory(userId: string, _summary: string): Promise<void> {
    try {
     // This is a simplified summary update. A real system might use an LLM to condense memories.
     // For now, we rely on kai_interactions for public memory.

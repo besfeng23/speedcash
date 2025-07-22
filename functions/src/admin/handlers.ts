@@ -190,7 +190,7 @@ export async function adminGetUserHandler(data: any, context: any) {
     };
 }
 
-export async function adminGetPartnersHandler(data: any, context: any) {
+export async function adminGetPartnersHandler(_data: any, context: any) {
     ensureIsAdmin(context);
     const partnersSnapshot = await db.collection('partners').orderBy('businessName').get();
     const partners = partnersSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -254,7 +254,7 @@ export async function adminGetWithdrawalQueueHandler(data: any, context: any) {
     return { requests };
 }
 
-export async function adminGetDashboardStatsHandler(data: any, context: any) {
+export async function adminGetDashboardStatsHandler(_data: any, context: any) {
     ensureIsAdmin(context);
 
     const pendingKycPromise = db.collection('kyc_submissions')

@@ -40,16 +40,16 @@ const kybDocSchema = z.object({
 
 // --- Authorization Helper ---
 const ensureIsPartner = (context: any): string => {
-    if (!context.auth || context.auth.token.role !== 'partner' || !context.auth.token.partnerId) {
+    if (!context.auth || context.auth.token.role !== 'partner') {
         throw new HttpsError('permission-denied', 'Only authenticated partners can perform this action.');
     }
-    return context.auth.token.partnerId as string;
+    return context.auth.uid; // Use UID as partner ID
 };
 
 
 // --- Handler Implementations ---
 
-export async function createPartnerHandler(data: any, context: any) {
+export async function createPartnerHandler(data: any, _context: any) {
   const { uid, businessName, email, mobileNumber } = createPartnerSchema.parse(data);
 
   // Set custom claims for the new partner user
@@ -97,59 +97,66 @@ export async function createPartnerHandler(data: any, context: any) {
 }
 
 
-export async function partnerGetDashboardStatsHandler(data: any, context: any) {
-  if (!context.auth) throw new HttpsError('unauthenticated', 'User must be authenticated.');
-
-  const partnerUid = context.auth.uid;
-
-  const walletRef = db.doc(`users/${partnerUid}/wallets/PHP`);
-  const walletPromise = walletRef.get();
-  
-  const now = new Date();
-  const oneDayAgo = new Date(now.getTime() - (24 * 60 * 60 * 1000));
-  const volume24hPromise = db.collection('transactions')
-    .where('receiverInfo.uid', '==', partnerUid)
-    .where('timestamp', '>=', oneDayAgo)
-    .orderBy('timestamp', 'desc')
-    .get();
-    
-  const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
-  const volume7dPromise = db.collection('transactions')
-    .where('receiverInfo.uid', '==', partnerUid)
-    .where('timestamp', '>=', sevenDaysAgo)
-    .orderBy('timestamp', 'desc')
-    .get();
-
-  const [walletDoc, volume24hSnapshot, volume7dSnapshot] = await Promise.all([
-      walletPromise, volume24hPromise, volume7dPromise
-  ]);
-
-  const availableBalance = walletDoc.exists ? walletDoc.data()?.balance || 0 : 0;
-  
-  const volume24h = volume24hSnapshot.docs.reduce((sum: number, doc: any) => sum + (doc.data().amount || 0), 0);
-
-  const dailyVolumes: {[key: string]: number} = {};
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(now.getTime() - (i * 24 * 60 * 60 * 1000));
-    dailyVolumes[d.toISOString().split('T')[0]] = 0;
+export async function partnerGetDashboardStatsHandler(_data: any, context: any) {
+  if (!context.auth) {
+    throw new HttpsError('unauthenticated', 'User must be authenticated.');
   }
 
-  volume7dSnapshot.forEach((doc: any) => {
-      const txTimestamp = doc.data().timestamp.toDate();
-      const dateString = txTimestamp.toISOString().split('T')[0];
-      if (dailyVolumes[dateString] !== undefined) {
-          dailyVolumes[dateString] += (doc.data().amount || 0);
-      }
-  });
+  const partnerUid = context.auth.uid;
+  
+  try {
+    const walletRef = db.doc(`users/${partnerUid}/wallets/PHP`);
+    const walletPromise = walletRef.get();
+    
+    const now = new Date();
+    const oneDayAgo = new Date(now.getTime() - (24 * 60 * 60 * 1000));
+    const volume24hPromise = db.collection('transactions')
+      .where('receiverInfo.uid', '==', partnerUid)
+      .where('timestamp', '>=', oneDayAgo)
+      .orderBy('timestamp', 'desc')
+      .get();
+      
+    const sevenDaysAgo = new Date(now.getTime() - (7 * 24 * 60 * 60 * 1000));
+    const volume7dPromise = db.collection('transactions')
+      .where('receiverInfo.uid', '==', partnerUid)
+      .where('timestamp', '>=', sevenDaysAgo)
+      .orderBy('timestamp', 'desc')
+      .get();
 
-  const dailyVolumeLast7Days = Object.entries(dailyVolumes)
-    .map(([date, volume]) => ({ date, volume }))
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const [walletDoc, volume24hSnapshot, volume7dSnapshot] = await Promise.all([
+        walletPromise, volume24hPromise, volume7dPromise
+    ]);
 
-  return { availableBalance, volume24h, dailyVolumeLast7Days };
+    const availableBalance = walletDoc.exists ? walletDoc.data()?.balance || 0 : 0;
+    
+    const volume24h = volume24hSnapshot.docs.reduce((sum: number, doc: any) => sum + (doc.data().amount || 0), 0);
+
+    const dailyVolumes: {[key: string]: number} = {};
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(now.getTime() - (i * 24 * 60 * 60 * 1000));
+      dailyVolumes[d.toISOString().split('T')[0]] = 0;
+    }
+
+    volume7dSnapshot.forEach((doc: any) => {
+        const txTimestamp = doc.data().timestamp.toDate();
+        const dateString = txTimestamp.toISOString().split('T')[0];
+        if (dailyVolumes[dateString] !== undefined) {
+            dailyVolumes[dateString] += (doc.data().amount || 0);
+        }
+    });
+
+    const dailyVolumeLast7Days = Object.entries(dailyVolumes)
+      .map(([date, volume]) => ({ date, volume }))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+    return { availableBalance, volume24h, dailyVolumeLast7Days };
+  } catch (error) {
+    console.error('Error getting partner dashboard stats:', error);
+    throw new HttpsError('internal', 'Failed to retrieve dashboard statistics');
+  }
 }
 
-export async function partnerGetTeamMembersHandler(data: any, context: any) {
+export async function partnerGetTeamMembersHandler(_data: any, context: any) {
     const partnerId = ensureIsPartner(context);
     const teamMembersSnapshot = await db.collection('users').where('partnerId', '==', partnerId).get();
 
@@ -310,7 +317,7 @@ export async function partnerSubmitKybDocumentHandler(data: any, context: any) {
 
 // --- Additional Partner Handlers ---
 
-export async function partnerGetProfileHandler(data: any, context: any) {
+export async function partnerGetProfileHandler(_data: any, context: any) {
     const partnerId = ensureIsPartner(context);
 
     const partnerRef = db.doc(`partners/${partnerId}`);

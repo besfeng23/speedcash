@@ -1,0 +1,195 @@
+{
+  "info": {
+    "name": "CPay Channel Aggregator API",
+    "description": "Test collection for CPay Channel Aggregator integration",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://sandbox.e-mango.ph/api",
+      "type": "string"
+    },
+    {
+      "key": "merchantNo",
+      "value": "300000064613",
+      "type": "string"
+    },
+    {
+      "key": "sha256Key",
+      "value": "uck6lo8sdjaarqf3sohdoovdvvn0kdnk",
+      "type": "string"
+    },
+    {
+      "key": "timestamp",
+      "value": "{{$timestamp}}",
+      "type": "string"
+    },
+    {
+      "key": "signature",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Payment Initiation",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Merchant-No",
+            "value": "{{merchantNo}}"
+          },
+          {
+            "key": "X-Timestamp",
+            "value": "{{timestamp}}"
+          },
+          {
+            "key": "X-Signature",
+            "value": "{{signature}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"amount\": 1000,\n  \"currency\": \"PHP\",\n  \"reference\": \"TEST{{$timestamp}}\",\n  \"description\": \"CPay Channel Aggregator Test Payment\",\n  \"callback_url\": \"https://applez-dch9v.web.app/webhook/channel-aggregator\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/payment/initiation/json",
+          "host": ["{{baseUrl}}"],
+          "path": ["payment", "initiation", "json"]
+        },
+        "description": "Initiate a new payment transaction"
+      }
+    },
+    {
+      "name": "2. Transaction Status Check",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Merchant-No",
+            "value": "{{merchantNo}}"
+          },
+          {
+            "key": "X-Timestamp",
+            "value": "{{timestamp}}"
+          },
+          {
+            "key": "X-Signature",
+            "value": "{{signature}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"transaction_id\": \"{{transactionId}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/payment/status/json",
+          "host": ["{{baseUrl}}"],
+          "path": ["payment", "status", "json"]
+        },
+        "description": "Check the status of a transaction"
+      }
+    },
+    {
+      "name": "3. Get Available Channels",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Merchant-No",
+            "value": "{{merchantNo}}"
+          },
+          {
+            "key": "X-Timestamp",
+            "value": "{{timestamp}}"
+          },
+          {
+            "key": "X-Signature",
+            "value": "{{signature}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/channels/list/json",
+          "host": ["{{baseUrl}}"],
+          "path": ["channels", "list", "json"]
+        },
+        "description": "Get list of available payment channels"
+      }
+    },
+    {
+      "name": "4. Webhook Test",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "X-Signature",
+            "value": "{{signature}}"
+          },
+          {
+            "key": "X-Timestamp",
+            "value": "{{timestamp}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"transaction_id\": \"TXN{{$timestamp}}\",\n  \"status\": \"completed\",\n  \"amount\": 1000,\n  \"currency\": \"PHP\",\n  \"reference\": \"TEST{{$timestamp}}\",\n  \"timestamp\": \"{{$isoTimestamp}}\"\n}"
+        },
+        "url": {
+          "raw": "https://applez-dch9v.web.app/webhook/channel-aggregator",
+          "host": ["applez-dch9v.web.app"],
+          "path": ["webhook", "channel-aggregator"]
+        },
+        "description": "Test webhook endpoint (simulates incoming webhook)"
+      }
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Generate timestamp",
+          "pm.environment.set('timestamp', Date.now().toString());",
+          "",
+          "// Get request body for signature generation",
+          "const body = pm.request.body ? pm.request.body.raw : '{}';",
+          "const timestamp = pm.environment.get('timestamp');",
+          "const sha256Key = pm.environment.get('sha256Key');",
+          "",
+          "// Generate signature",
+          "const rawString = body + timestamp + sha256Key;",
+          "const signature = CryptoJS.SHA256(rawString).toString();",
+          "",
+          "// Set signature in environment",
+          "pm.environment.set('signature', signature);",
+          "",
+          "console.log('Generated signature:', signature);",
+          "console.log('Raw string:', rawString);"
+        ]
+      }
+    }
+  ]
+} 

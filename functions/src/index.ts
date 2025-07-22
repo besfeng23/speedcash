@@ -19,3 +19,11 @@ export {
   addKycDocumentHandler, 
   adminDeleteKycDocumentHandler 
 } from './kyc/handlers';
+
+// --- SPEEDYPAY WEBHOOK HANDLERS ---
+export { 
+  speedypayWebhook,
+  speedypayWebhookHealth,
+  speedypayWebhookStats,
+  speedypayWebhookTest
+} from './partners/speedypay-webhook';

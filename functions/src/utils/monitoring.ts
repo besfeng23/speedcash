@@ -32,7 +32,7 @@ class MonitoringService {
     }
   }
 
-  async logCorsRequest(req: any, res: any, success: boolean) {
+  async logCorsRequest(req: any, _res: any, success: boolean) {
     const entry: LogEntry = {
       timestamp: new Date().toISOString(),
       level: success ? 'info' : 'warn',

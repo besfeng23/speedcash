@@ -3,6 +3,7 @@ import { HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { z } from 'zod';
 import { auditLog } from '../utils/audit';
+import { sendKycApprovedEmail, sendKycRejectedEmail } from '../utils/email';
 
 const db = admin.firestore();
 const storage = admin.storage();
@@ -64,9 +65,16 @@ export async function adminUpdateKycStatusHandler(data: any, context: any) {
   const userRef = db.doc(`users/${uid}`);
   const submissionRef = db.doc(`kyc_submissions/${uid}`);
 
+  let userEmail = '';
+  let userName = '';
+
   await db.runTransaction(async (t) => {
     const userDoc = await t.get(userRef);
     if (!userDoc.exists) throw new HttpsError('not-found', `User with UID ${uid} not found.`);
+    
+    const userData = userDoc.data()!;
+    userEmail = userData.email || '';
+    userName = userData.displayName || userData.email || 'User';
     
     t.update(userRef, { kycStatus: status });
     t.update(submissionRef, { 
@@ -76,6 +84,17 @@ export async function adminUpdateKycStatusHandler(data: any, context: any) {
     });
   });
 
+  // Send email notification
+  try {
+    if (status === 'VERIFIED') {
+      await sendKycApprovedEmail(userEmail, userName);
+    } else if (status === 'REJECTED') {
+      await sendKycRejectedEmail(userEmail, userName, rejectionReason || 'Documents unclear');
+    }
+  } catch (emailError) {
+    console.warn('Failed to send KYC status email:', emailError);
+  }
+
   await auditLog({ uid: adminUid! }, 'ADMIN_ACTION', { 
     action: 'UPDATE_KYC_STATUS', targetUser: uid, newStatus: status, rejectionReason 
   });
@@ -84,15 +103,52 @@ export async function adminUpdateKycStatusHandler(data: any, context: any) {
 }
 
 export async function addKycDocumentHandler(data: any, context: any) {
-    if (context.auth?.token.role !== 'admin' && context.auth?.token.role !== 'superadmin') {
-        throw new HttpsError('permission-denied', 'Admin role required.');
+    if (!context.auth) {
+        throw new HttpsError('unauthenticated', 'Authentication required.');
     }
-    const { userId, docUrl } = docUrlSchema.parse(data);
-    const submissionRef = db.doc(`kyc_submissions/${userId}`);
-    await submissionRef.update({
-        documentUrls: admin.firestore.FieldValue.arrayUnion(docUrl)
-    });
-    return { success: true };
+    
+    try {
+        const { userId, docUrl } = docUrlSchema.parse(data);
+        const adminUid = context.auth.uid;
+
+        // Verify admin permissions
+        if (context.auth.token.role !== 'admin' && context.auth.token.role !== 'superadmin') {
+            throw new HttpsError('permission-denied', 'Admin role required.');
+        }
+
+        // Validate user exists
+        const userRef = db.doc(`users/${userId}`);
+        const userDoc = await userRef.get();
+        
+        if (!userDoc.exists) {
+            throw new HttpsError('not-found', 'User not found.');
+        }
+
+        // Validate document URL format
+        try {
+            new URL(docUrl);
+        } catch {
+            throw new HttpsError('invalid-argument', 'Invalid document URL format.');
+        }
+
+        const submissionRef = db.doc(`kyc_submissions/${userId}`);
+        await submissionRef.update({
+            documentUrls: admin.firestore.FieldValue.arrayUnion(docUrl),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        await auditLog({ uid: adminUid }, 'ADMIN_ACTION', { 
+            action: 'ADD_KYC_DOCUMENT', targetUser: userId, docUrl 
+        });
+
+        return { success: true, message: 'Document added successfully.' };
+    } catch (error) {
+        if (error instanceof HttpsError) {
+            throw error;
+        }
+        console.error('Add KYC document error:', error);
+        throw new HttpsError('internal', 'Failed to add KYC document');
+    }
 }
 
 export async function adminDeleteKycDocumentHandler(data: any, context: any) {

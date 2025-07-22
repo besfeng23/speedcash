@@ -326,17 +326,17 @@ export class KoreanMallIntegration {
     console.log(`Welcome email would be sent to ${email} for store ${storeName} with partner ID ${partnerId}`);
   }
 
-  private async processCardPayment(paymentData: any): Promise<any> {
+  private async processCardPayment(_paymentData: any): Promise<any> {
     // TODO: Implement card payment processing
     return { success: true, message: 'Card payment processed successfully' };
   }
 
-  private async processBankTransfer(paymentData: any): Promise<any> {
+  private async processBankTransfer(_paymentData: any): Promise<any> {
     // TODO: Implement bank transfer processing
     return { success: true, message: 'Bank transfer processed successfully' };
   }
 
-  private async processMobilePayment(paymentData: any): Promise<any> {
+  private async processMobilePayment(_paymentData: any): Promise<any> {
     // TODO: Implement mobile payment processing
     return { success: true, message: 'Mobile payment processed successfully' };
   }
