@@ -1,6 +1,5 @@
 
 import './globals.css';
-import { cn } from '@/lib/utils';
 import { ClientRoot } from './ClientRoot';
 
 export const metadata = {
@@ -9,11 +8,5 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <html lang="en">
-      <body className={cn('font-body antialiased', 'min-h-screen bg-background font-sans')}>
-        <ClientRoot>{children}</ClientRoot>
-      </body>
-    </html>
-  );
+  return <ClientRoot>{children}</ClientRoot>;
 }
