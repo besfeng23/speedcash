@@ -7,6 +7,9 @@ interface EmailConfig {
   replyTo?: string;
   apiKey: string;
   serverPrefix: string;
+  audienceId: string;
+  retryAttempts: number;
+  contactStatus: string;
 }
 
 interface EmailTemplate {
@@ -26,60 +29,139 @@ class EmailService {
   private apiKey: string;
 
   constructor() {
-    this.apiKey = process.env.MAILCHIMP_API_KEY || '';
+    // Try to get config from Firebase Functions config first, fallback to environment variables
+    const functions = require('firebase-functions');
+    const mailchimpConfig = functions.config().mailchimp || {};
+    
+    this.apiKey = mailchimpConfig.oauth_token || process.env.MAILCHIMP_OAUTH_TOKEN || '';
     this.config = {
       fromEmail: process.env.FROM_EMAIL || 'noreply@cpay.com',
       fromName: process.env.FROM_NAME || 'CPay',
       replyTo: process.env.REPLY_TO_EMAIL || 'support@cpay.com',
-      apiKey: process.env.MAILCHIMP_API_KEY || '',
-      serverPrefix: process.env.MAILCHIMP_SERVER_PREFIX || ''
+      apiKey: mailchimpConfig.oauth_token || process.env.MAILCHIMP_OAUTH_TOKEN || '',
+      serverPrefix: 'us18', // Extracted from OAuth token
+      audienceId: mailchimpConfig.audience_id || process.env.MAILCHIMP_AUDIENCE_ID || '9a0d47ea7e',
+      retryAttempts: parseInt(mailchimpConfig.retry_attempts || process.env.MAILCHIMP_RETRY_ATTEMPTS || '2'),
+      contactStatus: mailchimpConfig.contact_status || process.env.MAILCHIMP_CONTACT_STATUS || 'subscribed'
     };
 
     if (!this.apiKey) {
-      console.warn('Mailchimp API key not configured. Email service will be disabled.');
+      console.warn('Mailchimp OAuth token not configured. Email service will be disabled.');
+    } else {
+      console.log('Mailchimp email service configured with audience ID:', this.config.audienceId);
     }
   }
 
   async sendEmail(emailData: EmailData): Promise<boolean> {
     if (!this.apiKey || !this.config.serverPrefix) {
-      console.log('Email service disabled - no API key or server prefix configured');
+      console.log('Email service disabled - no OAuth token or server prefix configured');
       return false;
     }
 
     try {
-      const response = await fetch(`https://${this.config.serverPrefix}.api.mailchimp.com/3.0/messages`, {
+      // First, add or update the contact in the audience
+      const contactData = {
+        email_address: emailData.to,
+        status: this.config.contactStatus,
+        merge_fields: {
+          FNAME: emailData.data?.firstName || '',
+          LNAME: emailData.data?.lastName || '',
+          ORG: emailData.data?.organization || ''
+        }
+      };
+
+      // Add/update contact in audience
+      const contactResponse = await fetch(`https://${this.config.serverPrefix}.api.mailchimp.com/3.0/lists/${this.config.audienceId}/members/${Buffer.from(emailData.to).toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')}`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(contactData)
+      });
+
+      if (!contactResponse.ok && contactResponse.status !== 400) {
+        const error = await contactResponse.text();
+        console.error('Mailchimp contact update error:', error);
+        throw new HttpsError('internal', 'Failed to update contact');
+      }
+
+      // Send campaign email
+      const campaignData = {
+        type: 'regular',
+        recipients: {
+          list_id: this.config.audienceId,
+          segment_opts: {
+            match: 'all',
+            conditions: [{
+              condition_type: 'EmailAddress',
+              op: 'is',
+              field: 'EMAIL',
+              value: emailData.to
+            }]
+          }
+        },
+        settings: {
+          subject_line: emailData.template.subject,
+          from_name: this.config.fromName,
+          reply_to: this.config.replyTo,
+          to_name: emailData.data?.firstName || emailData.to
+        }
+      };
+
+      // Create campaign
+      const campaignResponse = await fetch(`https://${this.config.serverPrefix}.api.mailchimp.com/3.0/campaigns`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${this.apiKey}`,
           'Content-Type': 'application/json'
         },
+        body: JSON.stringify(campaignData)
+      });
+
+      if (!campaignResponse.ok) {
+        const error = await campaignResponse.text();
+        console.error('Mailchimp campaign creation error:', error);
+        throw new HttpsError('internal', 'Failed to create email campaign');
+      }
+
+      const campaign = await campaignResponse.json();
+      
+      // Set campaign content
+      const contentResponse = await fetch(`https://${this.config.serverPrefix}.api.mailchimp.com/3.0/campaigns/${campaign.id}/content`, {
+        method: 'PUT',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json'
+        },
         body: JSON.stringify({
-          message: {
-            html: emailData.template.html,
-            text: emailData.template.text,
-            subject: emailData.template.subject,
-            from_email: this.config.fromEmail,
-            from_name: this.config.fromName,
-            to: [{
-              email: emailData.to,
-              type: 'to'
-            }],
-            headers: {
-              'Reply-To': this.config.replyTo
-            }
-          },
-          async: false
+          html: emailData.template.html,
+          plain_text: emailData.template.text
         })
       });
 
-      if (!response.ok) {
-        const error = await response.text();
-        console.error('Mailchimp API error:', error);
+      if (!contentResponse.ok) {
+        const error = await contentResponse.text();
+        console.error('Mailchimp content setting error:', error);
+        throw new HttpsError('internal', 'Failed to set email content');
+      }
+
+      // Send the campaign
+      const sendResponse = await fetch(`https://${this.config.serverPrefix}.api.mailchimp.com/3.0/campaigns/${campaign.id}/actions/send`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!sendResponse.ok) {
+        const error = await sendResponse.text();
+        console.error('Mailchimp send error:', error);
         throw new HttpsError('internal', 'Failed to send email');
       }
 
-      const result = await response.json();
-      console.log(`Email sent successfully to ${emailData.to}, message ID: ${result.id}`);
+      console.log(`Email sent successfully to ${emailData.to}, campaign ID: ${campaign.id}`);
       return true;
     } catch (error) {
       console.error('Email sending failed:', error);
@@ -194,25 +276,59 @@ export const emailService = new EmailService();
 // Convenience functions
 export async function sendWelcomeEmail(email: string, userName: string, partnerId?: string): Promise<boolean> {
   const template = emailService.getWelcomeEmailTemplate(userName, partnerId);
-  return emailService.sendEmail({ to: email, template });
+  const [firstName, ...lastNameParts] = userName.split(' ');
+  const lastName = lastNameParts.join(' ');
+  return emailService.sendEmail({ 
+    to: email, 
+    template,
+    data: {
+      firstName,
+      lastName,
+      organization: partnerId ? `Partner ${partnerId}` : 'CPay User'
+    }
+  });
 }
 
 export async function sendKycApprovedEmail(email: string, userName: string): Promise<boolean> {
   const template = emailService.getKycApprovedTemplate(userName);
-  return emailService.sendEmail({ to: email, template });
+  const [firstName, ...lastNameParts] = userName.split(' ');
+  const lastName = lastNameParts.join(' ');
+  return emailService.sendEmail({ 
+    to: email, 
+    template,
+    data: { firstName, lastName }
+  });
 }
 
 export async function sendKycRejectedEmail(email: string, userName: string, reason: string): Promise<boolean> {
   const template = emailService.getKycRejectedTemplate(userName, reason);
-  return emailService.sendEmail({ to: email, template });
+  const [firstName, ...lastNameParts] = userName.split(' ');
+  const lastName = lastNameParts.join(' ');
+  return emailService.sendEmail({ 
+    to: email, 
+    template,
+    data: { firstName, lastName }
+  });
 }
 
 export async function sendTransactionNotification(email: string, userName: string, transactionType: string, amount: string, currency: string): Promise<boolean> {
   const template = emailService.getTransactionNotificationTemplate(userName, transactionType, amount, currency);
-  return emailService.sendEmail({ to: email, template });
+  const [firstName, ...lastNameParts] = userName.split(' ');
+  const lastName = lastNameParts.join(' ');
+  return emailService.sendEmail({ 
+    to: email, 
+    template,
+    data: { firstName, lastName }
+  });
 }
 
 export async function sendPasswordResetEmail(email: string, userName: string, resetLink: string): Promise<boolean> {
   const template = emailService.getPasswordResetTemplate(userName, resetLink);
-  return emailService.sendEmail({ to: email, template });
+  const [firstName, ...lastNameParts] = userName.split(' ');
+  const lastName = lastNameParts.join(' ');
+  return emailService.sendEmail({ 
+    to: email, 
+    template,
+    data: { firstName, lastName }
+  });
 } 
