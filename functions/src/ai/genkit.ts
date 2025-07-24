@@ -6,7 +6,7 @@ export const ai = {
     console.log('AI generation called with:', params);
     
     // Simulate AI response based on type
-    const { prompt, type, model } = params;
+    const { prompt, type } = params;
     
     if (type === 'image') {
       return {
