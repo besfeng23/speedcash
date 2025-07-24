@@ -9,7 +9,7 @@
     "codebase": "default",
     "runtime": "nodejs20",
     "ignore": ["node_modules", ".git", "firebase-debug.log", "firebase-debug.*.log"],
-    "region": "us-central1",
+    "region": "asia-east2",
     "secrets": ["POSTMARK_API_KEY", "PAYMENT_GATEWAY_SECRET"]
   },
   "storage": {
