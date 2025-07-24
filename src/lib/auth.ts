@@ -1,11 +1,11 @@
-import { db } from '@/lib/firebase';
+import { adminDb } from '@/lib/firebase-admin';
 
 export async function verifyUserOrgAccess(userId: string, orgId: string): Promise<boolean> {
-  if (!userId || !orgId) {
+  if (!userId || !orgId || !adminDb) {
     return false;
   }
   try {
-    const orgRef = db.collection('organizations').doc(orgId);
+    const orgRef = adminDb.collection('organizations').doc(orgId);
     const orgDoc = await orgRef.get();
 
     if (!orgDoc.exists) {
