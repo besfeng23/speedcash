@@ -22,6 +22,8 @@ export {
 
 // --- TEST FUNCTION ---
 export { function3 } from './test-function';
+export { simpleTest } from './simple-test';
+export { basicTest } from './basic-test';
 
 // --- SPEEDYPAY WEBHOOK HANDLERS ---
 export { 
