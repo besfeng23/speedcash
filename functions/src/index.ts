@@ -20,6 +20,9 @@ export {
   adminDeleteKycDocumentHandler 
 } from './kyc/handlers';
 
+// --- TEST FUNCTION ---
+export { function3 } from './test-function';
+
 // --- SPEEDYPAY WEBHOOK HANDLERS ---
 export { 
   speedypayWebhook,

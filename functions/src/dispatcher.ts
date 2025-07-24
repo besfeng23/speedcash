@@ -9,7 +9,6 @@ import * as kaiHandlers from './kai/handlers';
 import * as partnerHandlers from './partners/handlers';
 import * as integrationHandlers from './integrations/handlers';
 import { onRequest } from 'firebase-functions/v2/https';
-import { monitoring } from './utils/monitoring';
 
 const dispatcherSchema = z.object({
   action: z.string(),
@@ -48,7 +47,7 @@ export const cpayDispatcher = onRequest({ region: 'asia-southeast1' }, async (re
   // Handle preflight OPTIONS request
   if (req.method === 'OPTIONS') {
     console.log(`[${new Date().toISOString()}] Handling OPTIONS preflight request`);
-    await monitoring.logCorsRequest(req, res, true);
+    // await monitoring.logCorsRequest(req, res, true);
     res.status(204).send('');
     return;
   }
@@ -57,7 +56,7 @@ export const cpayDispatcher = onRequest({ region: 'asia-southeast1' }, async (re
     // Validate request method
     if (req.method !== 'POST') {
       console.log(`[${new Date().toISOString()}] Method not allowed: ${req.method}`);
-      await monitoring.logApiCall(req, 'INVALID_METHOD', false, `Method ${req.method} not allowed`);
+      // await monitoring.logApiCall(req, 'INVALID_METHOD', false, `Method ${req.method} not allowed`);
       res.status(405).json({ error: 'Method not allowed. Only POST requests are accepted.' });
       return;
     }
@@ -129,7 +128,7 @@ export const cpayDispatcher = onRequest({ region: 'asia-southeast1' }, async (re
       case 'handleKoreanBankWebhook': result = await integrationHandlers.handleKoreanBankWebhookHandler(payload, req); break;
       default:
         console.log(`[${new Date().toISOString()}] Unknown action: ${action}`);
-        await monitoring.logApiCall(req, action, false, 'Unknown action');
+        // await monitoring.logApiCall(req, action, false, 'Unknown action');
         res.status(400).json({ error: 'Unknown action' });
         return;
     }
@@ -137,31 +136,31 @@ export const cpayDispatcher = onRequest({ region: 'asia-southeast1' }, async (re
     const duration = Date.now() - startTime;
     console.log(`[${new Date().toISOString()}] Action ${action} completed successfully in ${duration}ms`);
     
-    await monitoring.logApiCall(req, action, true);
-    await monitoring.logPerformance(action, duration);
+    // await monitoring.logApiCall(req, action, true);
+    // await monitoring.logPerformance(action, duration);
     
     res.json({ data: result });
   } catch (error: any) {
     const duration = Date.now() - startTime;
-    console.error(`[${new Date().toISOString()}] cpayDispatcher error for action ${req.body?.action || 'unknown'}:`, error);
+    console.error(`[${new Date().toISOString()}] cpayDispatcher error for action ${req.body?.action || 'unknown'} (${duration}ms):`, error);
     
     // Ensure CORS headers are set even for errors
     setCorsHeaders(res, origin);
     
     // Log the error
-    await monitoring.logError(error, {
-      action: req.body?.action || 'unknown',
-      method: req.method,
-      origin,
-      duration
-    });
+    // await monitoring.logError(error, {
+    //   action: req.body?.action || 'unknown',
+    //   method: req.method,
+    //   origin,
+    //   duration
+    // });
     
     if (error.name === 'ZodError') {
       console.log(`[${new Date().toISOString()}] Validation error:`, error.errors);
-      await monitoring.logApiCall(req, req.body?.action || 'unknown', false, 'Validation error');
+      // await monitoring.logApiCall(req, req.body?.action || 'unknown', false, 'Validation error');
       res.status(400).json({ error: 'Invalid request format', details: error.errors });
     } else {
-      await monitoring.logApiCall(req, req.body?.action || 'unknown', false, error.message);
+      // await monitoring.logApiCall(req, req.body?.action || 'unknown', false, error.message);
       res.status(500).json({ error: error.message || 'Internal server error' });
     }
   }
