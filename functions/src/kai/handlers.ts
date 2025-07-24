@@ -2,7 +2,7 @@
 
 import { HttpsError } from 'firebase-functions/v2/https';
 import { z } from 'zod';
-// import { askAiAssistant } from '../ai/flows/chat-assistant'; // TODO: Create AI flow
+import { ai } from '../ai/genkit'; // Import AI configuration
 
 // Use dynamic import for node-fetch to avoid ES module issues
 const fetch = async (url: string, options: any) => {
@@ -35,7 +35,17 @@ export async function askAuthenticatedKaiHandler(data: any, context: any) {
         const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
         if (!OPENAI_API_KEY) {
             console.error('[KAI] OpenAI API key not configured');
-            throw new HttpsError('failed-precondition', 'OpenAI API key is not set.');
+            // Fallback to local AI configuration
+            const aiResponse = await ai.generate({
+                prompt: query,
+                type: 'text',
+                model: 'local'
+            });
+            
+            return {
+                reply: aiResponse.output.text,
+                intent: 'GENERAL_QUERY'
+            };
         }
 
         // Prepare messages for OpenAI

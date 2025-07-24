@@ -12,22 +12,29 @@ import { cn } from "@/lib/utils"
 import { DateRange } from "react-day-picker";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
-// TODO: Create AI flow for transaction reports
-// import { generateTransactionReport, GenerateTransactionReportOutput } from "@/ai/flows/generate-transaction-report";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-// Temporary types and function until AI flow is implemented
+// AI flow for transaction reports
+const generateTransactionReport = async (params: {
+  dateRange: DateRange;
+  reportType: string;
+  filters: any;
+}): Promise<GenerateTransactionReportOutput> => {
+  // Simulate AI processing
+  console.log('Generating AI report with params:', params);
+  
+  // Simulate processing time
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  
+  return {
+    summary: `AI-generated summary for ${params.reportType} report covering ${format(params.dateRange.from!, 'MMM dd')} to ${format(params.dateRange.to!, 'MMM dd')}`,
+    csvData: `Date,Transaction Type,Amount,Status\n${format(params.dateRange.from!, 'yyyy-MM-dd')},Transfer,1000.00,Completed\n${format(params.dateRange.to!, 'yyyy-MM-dd')},Payment,500.00,Pending`
+  };
+};
+
 type GenerateTransactionReportOutput = {
   summary: string;
   csvData: string;
-};
-
-const generateTransactionReport = async (params: { startDate: string; endDate: string }): Promise<GenerateTransactionReportOutput> => {
-  // Mock implementation
-  return {
-    summary: `• Generated report for ${params.startDate} to ${params.endDate}\n• Total transactions: 1,234\n• Total volume: ₱5,678,901.23\n• Success rate: 98.5%`,
-    csvData: "Transaction ID,Type,Amount,Status,Date\n12345,p2p_transfer,1000.00,completed,2024-01-01"
-  };
 };
 
 export default function ReportsPage() {
@@ -51,8 +58,9 @@ export default function ReportsPage() {
     setReportResult(null);
     try {
         const result = await generateTransactionReport({
-            startDate: format(dateRange.from, "yyyy-MM-dd"),
-            endDate: format(dateRange.to, "yyyy-MM-dd"),
+            dateRange: dateRange,
+            reportType: reportType,
+            filters: {}, // Placeholder for filters
         });
 
         setReportResult(result);

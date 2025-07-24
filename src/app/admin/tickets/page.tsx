@@ -15,8 +15,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-// TODO: Import Label component
-// import { Label } from "@/components/ui/label";
+import { Label } from "@/components/ui/label";
 
 type Ticket = {
   id: string;
@@ -194,25 +193,23 @@ export default function AiTicketsPage() {
              <Card className="mt-auto">
                 <CardContent className="pt-6 space-y-4">
                      <div className="space-y-2">
-                        {/* TODO: Import Label component */}
-                        <div className="text-sm font-medium">Ticket Management</div>
-                        <div className="flex gap-4">
-                             <Select defaultValue={selectedTicket.status} onValueChange={(value) => handleStatusChange(selectedTicket.id, value)} disabled={updateTicketMutation.isPending}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Change status..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="NEW">New</SelectItem>
-                                    <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-                                    <SelectItem value="RESOLVED">Resolved</SelectItem>
-                                    <SelectItem value="CLOSED">Closed</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-                    <div className="space-y-2">
-                        {/* TODO: Import Label component */}
-                        <label className="text-sm font-medium" htmlFor="notes">Resolution Notes</label>
+                         <Label htmlFor="status" className="text-sm font-medium">Ticket Management</Label>
+                         <div className="flex gap-4">
+                              <Select defaultValue={selectedTicket.status} onValueChange={(value) => handleStatusChange(selectedTicket.id, value)} disabled={updateTicketMutation.isPending}>
+                                 <SelectTrigger>
+                                     <SelectValue placeholder="Change status..." />
+                                 </SelectTrigger>
+                                 <SelectContent>
+                                     <SelectItem value="NEW">New</SelectItem>
+                                     <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+                                     <SelectItem value="RESOLVED">Resolved</SelectItem>
+                                     <SelectItem value="CLOSED">Closed</SelectItem>
+                                 </SelectContent>
+                             </Select>
+                         </div>
+                     </div>
+                     <div className="space-y-2">
+                        <Label htmlFor="notes" className="text-sm font-medium">Resolution Notes</Label>
                         <Textarea 
                             id="notes" 
                             placeholder="Add internal notes for this ticket..." 

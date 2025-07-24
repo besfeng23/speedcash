@@ -21,10 +21,12 @@ import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
-  AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
 type TeamMember = {
@@ -228,8 +230,7 @@ export default function TeamManagementPage() {
                 )}
                 </TableBody>
             </Table>
-             {/* TODO: Import AlertDialogContent component */}
-             <div className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm">
+            <AlertDialogContent>
                 <AlertDialogHeader>
                     <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                     <AlertDialogDescription>
@@ -243,7 +244,7 @@ export default function TeamManagementPage() {
                         Yes, remove member
                     </AlertDialogAction>
                 </AlertDialogFooter>
-            </div>
+            </AlertDialogContent>
            </AlertDialog>
         </CardContent>
       </Card>

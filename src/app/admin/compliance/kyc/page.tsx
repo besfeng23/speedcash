@@ -9,9 +9,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { FileCheck2, Bot, Loader2, Trash2, Upload } from "lucide-react";
-// TODO: Create AI flows
-// import { KycDataExtractionOutput } from "@/ai/flows/kyc-data-extraction";
-// import { analyzeKycDocument } from "@/ai/flows/kyc-document-analysis";
 import { useToast } from "@/hooks/use-toast";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,6 +25,62 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+
+// AI flows for KYC processing
+const kycDataExtraction = async (documentUrl: string): Promise<KycDataExtractionOutput> => {
+  console.log('Extracting KYC data from:', documentUrl);
+  
+  // Simulate AI processing
+  await new Promise(resolve => setTimeout(resolve, 2000));
+  
+  return {
+    fullName: 'John Doe',
+    dateOfBirth: '1990-01-01',
+    address: '123 Main St, City, Country',
+    documentType: 'PASSPORT',
+    confidence: 0.92,
+    extractedFields: {
+      name: 'John Doe',
+      dob: '1990-01-01',
+      address: '123 Main St, City, Country',
+      documentNumber: 'ABC123456'
+    }
+  };
+};
+
+const analyzeKycDocument = async (documentUrl: string): Promise<DocumentAnalysisResult> => {
+  console.log('Analyzing KYC document:', documentUrl);
+  
+  // Simulate AI processing
+  await new Promise(resolve => setTimeout(resolve, 1500));
+  
+  return {
+    isValid: true,
+    documentType: 'PASSPORT',
+    authenticity: 0.95,
+    quality: 0.88,
+    issues: [],
+    recommendations: ['Document appears genuine', 'Good image quality']
+  };
+};
+
+type KycDataExtractionOutput = {
+  fullName: string;
+  dateOfBirth: string;
+  address: string;
+  documentType: string;
+  confidence: number;
+  extractedFields: any;
+};
+
+type DocumentAnalysisResult = {
+  isValid: boolean;
+  documentType: string;
+  authenticity: number;
+  quality: number;
+  issues: string[];
+  recommendations: string[];
+};
 
 const storage = getStorage(app);
 

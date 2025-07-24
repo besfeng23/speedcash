@@ -2,7 +2,6 @@
 import { onCall, CallableRequest, HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { z } from 'zod';
-// import { auditLog } from '../utils/audit'; // TODO: Create audit utility
 
 const db = admin.firestore();
 const storage = admin.storage();
@@ -11,6 +10,22 @@ const region = 'asia-southeast1';
 const functionOptions = {
   region,
   enforceAppCheck: process.env.NODE_ENV === 'production',
+};
+
+// Basic audit logging utility
+const auditLog = async (action: string, userId: string, details: any) => {
+  try {
+    await db.collection('audit_logs').add({
+      action,
+      userId,
+      details,
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
+      ip: 'server-side', // Could be enhanced with actual IP tracking
+    });
+  } catch (error) {
+    console.error('Audit logging failed:', error);
+    // Don't fail the main operation if audit logging fails
+  }
 };
 
 // Schema for submitting KYC data
@@ -43,6 +58,14 @@ export const submitKyc = onCall(functionOptions, async (request) => {
     }, { merge: true });
     
     t.update(userRef, { kycStatus: 'PENDING_REVIEW' });
+  });
+
+  // Add audit logging
+  await auditLog('KYC_SUBMISSION', uid, {
+    fullName: data.fullName,
+    dateOfBirth: data.dateOfBirth,
+    documentCount: data.documentUrls.length,
+    status: 'PENDING_REVIEW'
   });
 
   return { success: true, message: 'KYC submission received and is pending review.' };
