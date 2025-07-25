@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 
+export const dynamic = 'force-static';
+
 // 🔐 SpeedyPay Configuration
 const SPEEDYPAY_CONFIG = {
   secretKey: process.env.SPEEDYPAY_SECRET_KEY || 'uck6lo8sdjaarqf3sohdoovdvvn0kdnk',

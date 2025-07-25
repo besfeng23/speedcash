@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useApi, useApiQuery } from "@/hooks/useApi";
+import { ApiCallableResult } from "@/types/api";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
@@ -57,7 +58,7 @@ export default function PartnerManagementPage() {
   
   const handleDeactivate = async (partnerId: string, partnerName: string) => {
       const result = await suspendUserMutation.mutateAsync({ uid: partnerId, suspend: true });
-      if ((result as any)?.success) {
+      if ((result as ApiCallableResult)?.success) {
           toast({
               title: "Partner Deactivated",
               description: `${partnerName} has been deactivated.`,

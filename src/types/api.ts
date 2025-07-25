@@ -139,4 +139,112 @@ export interface ComponentProps {
   children?: React.ReactNode;
   className?: string;
   [key: string]: unknown;
+}
+
+// Additional Types for Lint Error Fixes
+export interface ApiCallableData {
+  [key: string]: string | number | boolean | Record<string, unknown> | unknown[];
+}
+
+export interface ApiCallableResult<T = unknown> {
+  data: T;
+  success: boolean;
+  message?: string;
+}
+
+export interface FormFieldData {
+  name: string;
+  value: string | number | boolean | File | undefined;
+  type?: string;
+  required?: boolean;
+}
+
+export interface ValidationError {
+  field: string;
+  message: string;
+}
+
+export interface ApiRequestOptions {
+  method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+  headers?: Record<string, string>;
+  body?: string | FormData | Record<string, unknown>;
+  timeout?: number;
+}
+
+export interface ApiResponseData<T = unknown> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
+
+export interface PaginationParams {
+  page?: number;
+  limit?: number;
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+// Specific API Response Types
+export interface LoginResponse {
+  user: UserProfile;
+  token: string;
+  refreshToken: string;
+}
+
+export interface KycResponse {
+  application: KycApplication;
+  documents: KycDocument[];
+}
+
+export interface TransactionResponse {
+  transaction: Transaction;
+  status: 'success' | 'error';
+}
+
+export interface PartnerResponse {
+  partner: Partner;
+  stats: PartnerStats;
+}
+
+// Error Types
+export interface ApiErrorResponse {
+  error: string;
+  code: string;
+  details?: Record<string, unknown>;
+}
+
+// Hook Types
+export interface UseApiReturn<T = unknown> {
+  data: T | null;
+  loading: boolean;
+  error: string | null;
+  call: (payload?: ApiCallableData) => Promise<ApiCallableResult<T>>;
+}
+
+// Component Event Types
+export interface ButtonClickEvent {
+  preventDefault: () => void;
+  currentTarget: HTMLButtonElement;
+}
+
+export interface InputChangeEvent {
+  target: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+  currentTarget: HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement;
+}
+
+export interface FormSubmitEvent {
+  preventDefault: () => void;
+  target: HTMLFormElement;
+  currentTarget: HTMLFormElement;
 } 

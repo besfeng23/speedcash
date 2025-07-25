@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = 'force-static';
+
 // CORS proxy to handle Firebase Functions CORS issues
 export async function POST(request: NextRequest) {
   try {

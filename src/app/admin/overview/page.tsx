@@ -1,7 +1,7 @@
 
 "use client";
 
-import { FileCheck2, UserPlus, Hourglass, BarChart, Loader2, Banknote, ShieldAlert, ServerCrash } from 'lucide-react';
+import { FileCheck2, UserPlus, Hourglass, BarChart, Loader2, Banknote, ShieldAlert } from 'lucide-react';
 import KpiCard from '@/components/kpi-card';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { useApiQuery } from '@/hooks/useApi';
+import { AdminStats } from '@/types/api';
 import { Skeleton } from '@/components/ui/skeleton';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -17,7 +18,11 @@ type ActivityLog = {
     adminName: string;
     details: {
         action: string;
-        [key: string]: any;
+        transactionId?: string;
+        targetUid?: string;
+        newStatus?: string;
+        targetUser?: string;
+        [key: string]: string | undefined;
     };
     timestamp: {
         seconds: number;
@@ -66,7 +71,7 @@ function ActionableQueueCard({ title, value, icon: Icon, href, isLoading }: { ti
 
 
 export default function AdminDashboard() {
-  const { data: dashboardStats, isLoading: statsLoading } = useApiQuery<any>(
+  const { data: dashboardStats, isLoading: statsLoading } = useApiQuery<AdminStats>(
     'adminGetDashboardStats',
     undefined,
     { enabled: true, queryKey: ['adminGetDashboardStats'] }

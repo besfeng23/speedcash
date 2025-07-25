@@ -5,8 +5,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+
 import { useApi, useApiQuery } from "@/hooks/useApi";
+import { ApiCallableResult } from "@/types/api";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2, ServerCrash } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -42,7 +43,7 @@ export default function WithdrawalQueuePage() {
 
   const handleApprove = async (transactionId: string) => {
     const result = await approveWithdrawalMutation.mutateAsync({ transactionId });
-    if ((result as any)?.success) {
+    if ((result as ApiCallableResult)?.success) {
       toast({ title: "Success", description: "Withdrawal has been approved and is processing." });
       queryClient.invalidateQueries({ queryKey: ["adminGetWithdrawalQueue"] });
       queryClient.invalidateQueries({ queryKey: ["adminGetDashboardStats"] });
@@ -51,7 +52,7 @@ export default function WithdrawalQueuePage() {
 
   const handleReject = async (transactionId: string) => {
     const result = await rejectWithdrawalMutation.mutateAsync({ transactionId, reason: "Admin rejection." });
-     if ((result as any)?.success) {
+     if ((result as ApiCallableResult)?.success) {
       toast({ title: "Success", description: "Withdrawal has been rejected and refunded." });
       queryClient.invalidateQueries({ queryKey: ["adminGetWithdrawalQueue"] });
       queryClient.invalidateQueries({ queryKey: ["adminGetDashboardStats"] });

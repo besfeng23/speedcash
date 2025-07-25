@@ -14,6 +14,7 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { Skeleton } from "@/components/ui/skeleton";
 import { app } from "@/lib/firebase";
 import { useApi, useApiQuery } from "@/hooks/useApi";
+import { ApiCallableResult } from "@/types/api";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,43 +27,43 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
-// AI flows for KYC processing
-const kycDataExtraction = async (documentUrl: string): Promise<KycDataExtractionOutput> => {
-  console.log('Extracting KYC data from:', documentUrl);
-  
-  // Simulate AI processing
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  
-  return {
-    fullName: 'John Doe',
-    dateOfBirth: '1990-01-01',
-    address: '123 Main St, City, Country',
-    documentType: 'PASSPORT',
-    confidence: 0.92,
-    extractedFields: {
-      name: 'John Doe',
-      dob: '1990-01-01',
-      address: '123 Main St, City, Country',
-      documentNumber: 'ABC123456'
-    }
-  };
-};
+// AI flows for KYC processing - commented out as not currently used
+// const kycDataExtraction = async (documentUrl: string): Promise<KycDataExtractionOutput> => {
+//   console.log('Extracting KYC data from:', documentUrl);
+//   
+//   // Simulate AI processing
+//   await new Promise(resolve => setTimeout(resolve, 2000));
+//   
+//   return {
+//     fullName: 'John Doe',
+//     dateOfBirth: '1990-01-01',
+//     address: '123 Main St, City, Country',
+//     documentType: 'PASSPORT',
+//     confidence: 0.92,
+//     extractedFields: {
+//       name: 'John Doe',
+//       dob: '1990-01-01',
+//       address: '123 Main St, City, Country',
+//       documentNumber: 'ABC123456'
+//     }
+//   };
+// };
 
-const analyzeKycDocument = async (documentUrl: string): Promise<DocumentAnalysisResult> => {
-  console.log('Analyzing KYC document:', documentUrl);
-  
-  // Simulate AI processing
-  await new Promise(resolve => setTimeout(resolve, 1500));
-  
-  return {
-    isValid: true,
-    documentType: 'PASSPORT',
-    authenticity: 0.95,
-    quality: 0.88,
-    issues: [],
-    recommendations: ['Document appears genuine', 'Good image quality']
-  };
-};
+// const analyzeKycDocument = async (documentUrl: string): Promise<DocumentAnalysisResult> => {
+//   console.log('Analyzing KYC document:', documentUrl);
+//   
+//   // Simulate AI processing
+//   await new Promise(resolve => setTimeout(resolve, 1500));
+//   
+//   return {
+//     isValid: true,
+//     documentType: 'PASSPORT',
+//     authenticity: 0.95,
+//     quality: 0.88,
+//     issues: [],
+//     recommendations: ['Document appears genuine', 'Good image quality']
+//   };
+// };
 
 type KycDataExtractionOutput = {
   fullName: string;
@@ -70,7 +71,7 @@ type KycDataExtractionOutput = {
   address: string;
   documentType: string;
   confidence: number;
-  extractedFields: any;
+  extractedFields: Record<string, string>;
 };
 
 type DocumentAnalysisResult = {
@@ -99,7 +100,7 @@ type Submission = {
 
 export default function KycQueuePage() {
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
-  const [aiAnalysisResult, setAiAnalysisResult] = useState<any | null>(null); // Changed type to any as KycDataExtractionOutput is commented out
+  const [aiAnalysisResult, setAiAnalysisResult] = useState<DocumentAnalysisResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
@@ -131,7 +132,7 @@ export default function KycQueuePage() {
   const handleApproveReject = async (id: string | undefined, status: 'VERIFIED' | 'REJECTED') => {
     if (!id) return;
     const result = await updateKycStatusMutation.mutateAsync({ uid: id, status: status, rejectionReason: status === 'REJECTED' ? 'Documents unclear.' : undefined });
-    if((result as any)?.success) {
+    if((result as ApiCallableResult)?.success) {
         toast({ title: "Status Updated", description: `The KYC status has been ${status.toLowerCase()}.` });
         queryClient.invalidateQueries({ queryKey: ['adminKycQueue'] });
         queryClient.invalidateQueries({ queryKey: ['adminGetDashboardStats'] });
@@ -144,7 +145,7 @@ export default function KycQueuePage() {
     setIsAnalyzing(false);
   }
 
-  const handleAnalyzeDocument = async (docUrl: string, docType: string) => {
+  const handleAnalyzeDocument = async (_docUrl: string, _docType: string) => {
     setIsAnalyzing(true);
     setAiAnalysisResult(null);
     try {
@@ -175,7 +176,7 @@ export default function KycQueuePage() {
         toast({ title: "Document Deleted", description: "The document has been successfully removed." });
         queryClient.invalidateQueries({ queryKey: ['adminKycQueue'] });
 
-    } catch (e) {
+    } catch (_e) {
         toast({ variant: "destructive", title: "Deletion Failed", description: "Could not delete the document." });
     }
   }
@@ -314,7 +315,7 @@ export default function KycQueuePage() {
                   {(selectedSubmission.documentUrls || []).map((docUrl, i) => (
                     <Card key={docUrl} className="p-2 group">
                       <div className="rounded-lg border text-center aspect-video flex items-center justify-center bg-muted overflow-hidden">
-                        <img src={docUrl} alt={`Document ${i+1}`} className="max-h-full max-w-full object-contain" data-ai-hint="id document"/>
+                        <img src={docUrl} alt={`Document ${i+1}`} className="max-h-full max-w-full object-contain" data-ai-hint='id document' />
                       </div>
                       <div className="flex gap-2 mt-2">
                         <Button 
