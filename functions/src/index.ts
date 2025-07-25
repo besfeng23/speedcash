@@ -21,17 +21,19 @@ export {
 } from './kyc/handlers';
 
 // --- TEST FUNCTION ---
-export { function3 } from './test-function';
+// Temporarily commented out due to build service account issues
+// export { function3 } from './test-function';
 export { simpleTest } from './simple-test';
 export { basicTest } from './basic-test';
 export { standaloneTest } from './standalone-test';
 export { expressTest } from './express-test';
-export { v1Test } from './v1-test';
+// export { v1Test } from './v1-test';
 
 // --- SPEEDYPAY WEBHOOK HANDLERS ---
-export { 
-  speedypayWebhook,
-  speedypayWebhookHealth,
-  speedypayWebhookStats,
-  speedypayWebhookTest
-} from './partners/speedypay-webhook';
+// Temporarily commented out due to build service account issues
+// export { 
+//   speedypayWebhook,
+//   speedypayWebhookHealth,
+//   speedypayWebhookStats,
+//   speedypayWebhookTest
+// } from './partners/speedypay-webhook';

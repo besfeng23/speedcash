@@ -1,6 +1,8 @@
 import * as functions from 'firebase-functions';
 
-export const v1Test = functions.https.onRequest((req, res) => {
+export const v1Test = functions.https.onRequest({ 
+  region: 'asia-southeast1' 
+}, (req, res) => {
   console.log('V1 test function called');
   
   // Set CORS headers

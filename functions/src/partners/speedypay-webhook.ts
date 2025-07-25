@@ -227,7 +227,7 @@ async function sendAdminAlert(transaction: any) {
 
 // 🌐 SpeedyPay Webhook Handler
 export const speedypayWebhook = functions.https.onRequest({ 
-  region: 'us-central1',
+  region: 'asia-southeast1',
   cors: true 
 }, async (req, res) => {
   // Set CORS headers
@@ -334,7 +334,7 @@ export const speedypayWebhook = functions.https.onRequest({
 
 // 🔍 Webhook Health Check
 export const speedypayWebhookHealth = functions.https.onRequest({ 
-  region: 'us-central1',
+  region: 'asia-southeast1',
   cors: true 
 }, async (req, res) => {
   // Set CORS headers
@@ -373,7 +373,7 @@ export const speedypayWebhookHealth = functions.https.onRequest({
 
 // 📊 Webhook Statistics
 export const speedypayWebhookStats = functions.https.onRequest({ 
-  region: 'us-central1',
+  region: 'asia-southeast1',
   cors: true 
 }, async (req, res) => {
   // Set CORS headers
@@ -446,7 +446,7 @@ export const speedypayWebhookStats = functions.https.onRequest({
 
 // 🔧 Webhook Test Endpoint
 export const speedypayWebhookTest = functions.https.onRequest({ 
-  region: 'us-central1',
+  region: 'asia-southeast1',
   cors: true 
 }, async (req, res) => {
   // Set CORS headers

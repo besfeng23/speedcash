@@ -23,6 +23,12 @@
         "source": "**",
         "destination": "/index.html"
       }
-    ]
+    ],
+    "appHosting": {
+      "framework": "nextjs",
+      "buildCommand": "npm run build",
+      "outputDirectory": ".next",
+      "nodeVersion": "18"
+    }
   }
 }
