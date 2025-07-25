@@ -1,0 +1,497 @@
+{
+  "info": {
+    "name": "CPay API Collection",
+    "description": "Complete API collection for CPay payment platform integration. Includes all endpoints, authentication, and example requests.",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{api_secret_key}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://asia-southeast1-applez-dch9v.cloudfunctions.net",
+      "type": "string"
+    },
+    {
+      "key": "api_secret_key",
+      "value": "sk_test_your_test_key_here",
+      "type": "string",
+      "description": "Your CPay API secret key (test or live)"
+    },
+    {
+      "key": "user_id",
+      "value": "test_user_123",
+      "type": "string",
+      "description": "Test user ID for API calls"
+    },
+    {
+      "key": "partner_id",
+      "value": "test_partner_123",
+      "type": "string",
+      "description": "Test partner ID for API calls"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "description": "API authentication and security endpoints",
+      "item": [
+        {
+          "name": "Test API Connection",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"getWalletBalance\",\n  \"data\": {\n    \"uid\": \"{{user_id}}\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/cpayDispatcher",
+              "host": ["{{base_url}}"],
+              "path": ["cpayDispatcher"]
+            },
+            "description": "Test your API connection by getting a wallet balance"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Wallets",
+      "description": "Wallet balance and management operations",
+      "item": [
+        {
+          "name": "Get Wallet Balance",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"getWalletBalance\",\n  \"data\": {\n    \"uid\": \"{{user_id}}\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/cpayDispatcher",
+              "host": ["{{base_url}}"],
+              "path": ["cpayDispatcher"]
+            },
+            "description": "Get the current balance for all currencies in a user's wallet"
+          },
+          "response": []
+        },
+        {
+          "name": "Get User Profile",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"getUserProfile\",\n  \"data\": {\n    \"uid\": \"{{user_id}}\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/cpayDispatcher",
+              "host": ["{{base_url}}"],
+              "path": ["cpayDispatcher"]
+            },
+            "description": "Get user profile information including KYC status"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Transactions",
+      "description": "Payment and transfer operations",
+      "item": [
+        {
+          "name": "Initiate P2P Transfer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"initiateP2PTransfer\",\n  \"data\": {\n    \"senderUid\": \"{{user_id}}\",\n    \"receiverMobileNumber\": \"+639123456789\",\n    \"amount\": 1000,\n    \"currency\": \"PHP\",\n    \"description\": \"Payment for services\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/cpayDispatcher",
+              "host": ["{{base_url}}"],
+              "path": ["cpayDispatcher"]
+            },
+            "description": "Send money to another CPay user by mobile number"
+          },
+          "response": []
+        },
+        {
+          "name": "Initiate Cash In",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"initiateCashIn\",\n  \"data\": {\n    \"uid\": \"{{user_id}}\",\n    \"amount\": 5000,\n    \"currency\": \"PHP\",\n    \"method\": \"bank_transfer\",\n    \"bankCode\": \"BDO\",\n    \"accountNumber\": \"1234567890\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/cpayDispatcher",
+              "host": ["{{base_url}}"],
+              "path": ["cpayDispatcher"]
+            },
+            "description": "Initiate a cash-in transaction to add funds to wallet"
+          },
+          "response": []
+        },
+        {
+          "name": "Initiate Cash Out",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"initiateCashOut\",\n  \"data\": {\n    \"uid\": \"{{user_id}}\",\n    \"amount\": 2000,\n    \"currency\": \"PHP\",\n    \"method\": \"instapay\",\n    \"bankCode\": \"BDO\",\n    \"accountNumber\": \"1234567890\",\n    \"accountName\": \"John Doe\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/cpayDispatcher",
+              "host": ["{{base_url}}"],
+              "path": ["cpayDispatcher"]
+            },
+            "description": "Initiate a cash-out transaction to withdraw funds"
+          },
+          "response": []
+        },
+        {
+          "name": "Initiate InstaPay Transfer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"initiateInstaPayTransfer\",\n  \"data\": {\n    \"uid\": \"{{user_id}}\",\n    \"amount\": 1500,\n    \"currency\": \"PHP\",\n    \"bankCode\": \"BDO\",\n    \"accountNumber\": \"1234567890\",\n    \"accountName\": \"Jane Smith\",\n    \"description\": \"Payment for goods\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/cpayDispatcher",
+              "host": ["{{base_url}}"],
+              "path": ["cpayDispatcher"]
+            },
+            "description": "Send money to any Philippine bank via InstaPay"
+          },
+          "response": []
+        },
+        {
+          "name": "Initiate PesoNet Transfer",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"initiatePesoNetTransfer\",\n  \"data\": {\n    \"uid\": \"{{user_id}}\",\n    \"amount\": 3000,\n    \"currency\": \"PHP\",\n    \"bankCode\": \"BPI\",\n    \"accountNumber\": \"0987654321\",\n    \"accountName\": \"Bob Johnson\",\n    \"description\": \"Business payment\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/cpayDispatcher",
+              "host": ["{{base_url}}"],
+              "path": ["cpayDispatcher"]
+            },
+            "description": "Send money to any Philippine bank via PesoNet"
+          },
+          "response": []
+        },
+        {
+          "name": "Initiate Remittance",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"initiateRemittance\",\n  \"data\": {\n    \"uid\": \"{{user_id}}\",\n    \"amount\": 50000,\n    \"currency\": \"PHP\",\n    \"recipientName\": \"Kim Min-jun\",\n    \"recipientPhone\": \"+82-10-1234-5678\",\n    \"recipientAddress\": \"123 Gangnam-gu, Seoul, South Korea\",\n    \"recipientBank\": \"Shinhan Bank\",\n    \"recipientAccount\": \"123-456-789012\",\n    \"purpose\": \"Family support\",\n    \"description\": \"Monthly remittance to family\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/cpayDispatcher",
+              "host": ["{{base_url}}"],
+              "path": ["cpayDispatcher"]
+            },
+            "description": "Send international remittance to Korea"
+          },
+          "response": []
+        },
+        {
+          "name": "Initiate Buy Load",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"initiateBuyLoad\",\n  \"data\": {\n    \"uid\": \"{{user_id}}\",\n    \"amount\": 100,\n    \"currency\": \"PHP\",\n    \"mobileNumber\": \"+639123456789\",\n    \"provider\": \"Smart\",\n    \"loadType\": \"Regular\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/cpayDispatcher",
+              "host": ["{{base_url}}"],
+              "path": ["cpayDispatcher"]
+            },
+            "description": "Purchase mobile load for any Philippine network"
+          },
+          "response": []
+        },
+        {
+          "name": "Initiate Bill Payment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"initiateBillPayment\",\n  \"data\": {\n    \"uid\": \"{{user_id}}\",\n    \"amount\": 2500,\n    \"currency\": \"PHP\",\n    \"billType\": \"electricity\",\n    \"provider\": \"Meralco\",\n    \"accountNumber\": \"1234567890\",\n    \"customerName\": \"John Doe\",\n    \"dueDate\": \"2024-01-15\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/cpayDispatcher",
+              "host": ["{{base_url}}"],
+              "path": ["cpayDispatcher"]
+            },
+            "description": "Pay utility bills and other services"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Transaction History",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"getTransactionHistory\",\n  \"data\": {\n    \"uid\": \"{{user_id}}\",\n    \"limit\": 10,\n    \"offset\": 0,\n    \"type\": \"all\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/cpayDispatcher",
+              "host": ["{{base_url}}"],
+              "path": ["cpayDispatcher"]
+            },
+            "description": "Get transaction history for a user"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "KYC",
+      "description": "Know Your Customer operations",
+      "item": [
+        {
+          "name": "Submit KYC",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"submitKyc\",\n  \"data\": {\n    \"fullName\": \"John Doe\",\n    \"dateOfBirth\": \"1990-01-01\",\n    \"address\": \"123 Main Street, Manila, Philippines\",\n    \"documentUrls\": [\n      \"https://example.com/id_front.jpg\",\n      \"https://example.com/id_back.jpg\"\n    ]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/cpayDispatcher",
+              "host": ["{{base_url}}"],
+              "path": ["cpayDispatcher"]
+            },
+            "description": "Submit KYC documents for verification"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Partners",
+      "description": "Partner-specific operations",
+      "item": [
+        {
+          "name": "Get Partner Dashboard Stats",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"partnerGetDashboardStats\",\n  \"data\": {}\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/cpayDispatcher",
+              "host": ["{{base_url}}"],
+              "path": ["cpayDispatcher"]
+            },
+            "description": "Get partner dashboard statistics and metrics"
+          },
+          "response": []
+        },
+        {
+          "name": "Initiate Test Payout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"action\": \"partnerInitiateTestPayout\",\n  \"data\": {\n    \"partnerId\": \"{{partner_id}}\",\n    \"amount\": 5000,\n    \"channel\": \"instapay\",\n    \"accountNumber\": \"1234567890\",\n    \"accountName\": \"Partner Business\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/cpayDispatcher",
+              "host": ["{{base_url}}"],
+              "path": ["cpayDispatcher"]
+            },
+            "description": "Initiate a test payout for partner verification"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Webhooks",
+      "description": "Webhook testing and verification",
+      "item": [
+        {
+          "name": "Test Webhook Endpoint",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-CPay-Signature",
+                "value": "{{webhook_signature}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"id\": \"evt_test_123\",\n  \"type\": \"payment.succeeded\",\n  \"data\": {\n    \"transactionId\": \"txn_123456\",\n    \"amount\": 1000,\n    \"currency\": \"PHP\",\n    \"status\": \"completed\"\n  },\n  \"timestamp\": \"2024-01-01T12:00:00Z\",\n  \"signature\": \"{{webhook_signature}}\"\n}"
+            },
+            "url": {
+              "raw": "{{webhook_url}}",
+              "host": ["{{webhook_url}}"]
+            },
+            "description": "Test your webhook endpoint with sample data"
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Set environment variables based on request",
+          "if (pm.request.url.host.includes('test')) {",
+          "    pm.environment.set('environment', 'test');",
+          "} else {",
+          "    pm.environment.set('environment', 'live');",
+          "}"
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Common test script for all requests",
+          "pm.test('Status code is 200', function () {",
+          "    pm.response.to.have.status(200);",
+          "});",
+          "",
+          "pm.test('Response has success field', function () {",
+          "    const response = pm.response.json();",
+          "    pm.expect(response).to.have.property('success');",
+          "});",
+          "",
+          "pm.test('Response time is less than 5000ms', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "});",
+          "",
+          "// Store response data for use in other requests",
+          "if (pm.response.json().success) {",
+          "    const response = pm.response.json();",
+          "    if (response.data && response.data.id) {",
+          "        pm.environment.set('last_transaction_id', response.data.id);",
+          "    }",
+          "}"
+        ]
+      }
+    }
+  ]
+} 

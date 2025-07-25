@@ -1,0 +1,51 @@
+{
+  "name": "@cpay/nodejs-sdk",
+  "version": "1.0.0",
+  "description": "Official Node.js SDK for CPay Payment Platform API",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts",
+    "prepare": "npm run build"
+  },
+  "keywords": [
+    "cpay",
+    "payment",
+    "api",
+    "sdk",
+    "nodejs",
+    "typescript"
+  ],
+  "author": "CPay Team <support@cpay.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cpay/sdk-nodejs.git"
+  },
+  "bugs": {
+    "url": "https://github.com/cpay/sdk-nodejs/issues"
+  },
+  "homepage": "https://docs.cpay.com/sdk/nodejs",
+  "dependencies": {
+    "axios": "^1.6.0",
+    "crypto": "^1.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.0.0",
+    "jest": "^29.0.0",
+    "typescript": "^5.0.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
+  ]
+} 

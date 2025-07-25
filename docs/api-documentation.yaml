@@ -1,0 +1,352 @@
+openapi: 3.0.3
+info:
+  title: CPay API
+  description: |
+    # CPay Payment Platform API
+    
+    Welcome to the CPay API documentation. This API allows partner banks and businesses to integrate with CPay's payment processing platform.
+    
+    ## Getting Started
+    
+    1. **Authentication**: All API requests require authentication using your API keys
+    2. **Environment**: Use test environment for development, live for production
+    3. **Rate Limits**: 1000 requests per minute per API key
+    4. **Webhooks**: Configure webhooks to receive real-time event notifications
+    
+    ## Quick Start
+    
+    ```bash
+    # Test your connection
+    curl -X POST https://asia-southeast1-applez-dch9v.cloudfunctions.net/cpayDispatcher \
+      -H "Content-Type: application/json" \
+      -H "Authorization: Bearer YOUR_API_KEY" \
+      -d '{"action": "getWalletBalance", "data": {"uid": "user_id"}}'
+    ```
+    
+    ## Support
+    
+    - **Documentation**: https://docs.cpay.com
+    - **Support**: support@cpay.com
+    - **Status**: https://status.cpay.com
+    
+  version: 1.0.0
+  contact:
+    name: CPay Support
+    email: support@cpay.com
+    url: https://cpay.com/support
+  license:
+    name: Proprietary
+    url: https://cpay.com/terms
+
+servers:
+  - url: https://asia-southeast1-applez-dch9v.cloudfunctions.net
+    description: Production Server
+  - url: https://asia-southeast1-applez-dch9v.cloudfunctions.net
+    description: Test Server (use test API keys)
+
+security:
+  - BearerAuth: []
+
+paths:
+  /cpayDispatcher:
+    post:
+      summary: CPay API Dispatcher
+      description: |
+        Main API endpoint for all CPay operations. All requests are routed through this single endpoint.
+        
+        ## Authentication
+        Include your API key in the Authorization header:
+        ```
+        Authorization: Bearer sk_live_your_secret_key_here
+        ```
+        
+        ## Request Format
+        ```json
+        {
+          "action": "action_name",
+          "data": {
+            // Action-specific parameters
+          }
+        }
+        ```
+        
+        ## Response Format
+        ```json
+        {
+          "success": true,
+          "data": {
+            // Response data
+          },
+          "message": "Success message"
+        }
+        ```
+      operationId: cpayDispatcher
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ApiRequest'
+            examples:
+              getWalletBalance:
+                summary: Get Wallet Balance
+                value:
+                  action: getWalletBalance
+                  data:
+                    uid: "user_123"
+              initiateP2PTransfer:
+                summary: Initiate P2P Transfer
+                value:
+                  action: initiateP2PTransfer
+                  data:
+                    senderUid: "user_123"
+                    receiverMobileNumber: "+639123456789"
+                    amount: 1000
+                    currency: "PHP"
+                    description: "Payment for services"
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Bad request - validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Unauthorized - invalid API key
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Your API secret key. Include it in the Authorization header.
+        
+        **Test Environment**: `sk_test_...`
+        **Live Environment**: `sk_live_...`
+
+  schemas:
+    ApiRequest:
+      type: object
+      required:
+        - action
+        - data
+      properties:
+        action:
+          type: string
+          description: The API action to perform
+          enum:
+            - getWalletBalance
+            - initiateP2PTransfer
+            - initiateCashIn
+            - initiateCashOut
+            - initiateInstaPayTransfer
+            - initiatePesoNetTransfer
+            - initiateRemittance
+            - initiateBuyLoad
+            - initiateBillPayment
+            - getTransactionHistory
+            - getUserProfile
+            - submitKyc
+            - partnerGetDashboardStats
+            - partnerInitiateTestPayout
+        data:
+          type: object
+          description: Action-specific parameters
+
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: Whether the request was successful
+        data:
+          type: object
+          description: Response data (varies by action)
+        message:
+          type: string
+          description: Success or error message
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Human-readable error message
+        details:
+          type: object
+          description: Additional error details
+
+    # Wallet & Balance Schemas
+    WalletBalance:
+      type: object
+      properties:
+        balances:
+          type: object
+          additionalProperties:
+            type: number
+          description: Balance for each currency
+          example:
+            PHP: 15000.50
+            KRW: 250000
+
+    # Transaction Schemas
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique transaction ID
+        type:
+          type: string
+          enum: [P2P, CASH_IN, CASH_OUT, REMITTANCE, BILL_PAYMENT, BUY_LOAD]
+        amount:
+          type: number
+          description: Transaction amount
+        currency:
+          type: string
+          enum: [PHP, KRW]
+        status:
+          type: string
+          enum: [PENDING, COMPLETED, FAILED, CANCELLED]
+        senderInfo:
+          $ref: '#/components/schemas/UserInfo'
+        receiverInfo:
+          $ref: '#/components/schemas/UserInfo'
+        timestamp:
+          type: string
+          format: date-time
+        description:
+          type: string
+        fees:
+          type: number
+        exchangeRate:
+          type: number
+          description: Exchange rate used (for remittances)
+
+    UserInfo:
+      type: object
+      properties:
+        uid:
+          type: string
+        displayName:
+          type: string
+        email:
+          type: string
+        mobileNumber:
+          type: string
+
+    # Partner Schemas
+    PartnerStats:
+      type: object
+      properties:
+        availableBalance:
+          type: number
+          description: Available balance for payout
+        volume24h:
+          type: number
+          description: Transaction volume in last 24 hours
+        volume7d:
+          type: number
+          description: Transaction volume in last 7 days
+        dailyVolumeLast7Days:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              volume:
+                type: number
+
+    # KYC Schemas
+    KycSubmission:
+      type: object
+      properties:
+        fullName:
+          type: string
+        dateOfBirth:
+          type: string
+          format: date
+        address:
+          type: string
+        documentUrls:
+          type: array
+          items:
+            type: string
+            format: uri
+        status:
+          type: string
+          enum: [PENDING_REVIEW, VERIFIED, REJECTED]
+
+    # Webhook Schemas
+    WebhookEvent:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique webhook event ID
+        type:
+          type: string
+          enum:
+            - payment.succeeded
+            - payment.failed
+            - transfer.completed
+            - kyc.verified
+            - kyc.rejected
+            - payout.initiated
+            - payout.completed
+            - payout.failed
+        data:
+          type: object
+          description: Event-specific data
+        timestamp:
+          type: string
+          format: date-time
+        signature:
+          type: string
+          description: Webhook signature for verification
+
+tags:
+  - name: Authentication
+    description: API authentication and security
+  - name: Wallets
+    description: Wallet balance and management
+  - name: Transactions
+    description: Payment and transfer operations
+  - name: Partners
+    description: Partner-specific operations
+  - name: KYC
+    description: Know Your Customer operations
+  - name: Webhooks
+    description: Real-time event notifications 
