@@ -8,6 +8,9 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Explicitly disable static export to ensure SSR is used
+  output: undefined,
+  trailingSlash: false,
   images: {
     unoptimized: true,
     remotePatterns: [
