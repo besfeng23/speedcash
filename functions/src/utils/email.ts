@@ -29,20 +29,17 @@ class EmailService {
   private apiKey: string;
 
   constructor() {
-    // Try to get config from Firebase Functions config first, fallback to environment variables
-    const functions = require('firebase-functions');
-    const mailchimpConfig = functions.config().mailchimp || {};
-    
-    this.apiKey = mailchimpConfig.oauth_token || process.env.MAILCHIMP_OAUTH_TOKEN || '';
+    // Get config from environment variables only (Firebase Functions v2)
+    this.apiKey = process.env.MAILCHIMP_OAUTH_TOKEN || '';
     this.config = {
       fromEmail: process.env.FROM_EMAIL || 'noreply@cpay.com',
       fromName: process.env.FROM_NAME || 'CPay',
       replyTo: process.env.REPLY_TO_EMAIL || 'support@cpay.com',
-      apiKey: mailchimpConfig.oauth_token || process.env.MAILCHIMP_OAUTH_TOKEN || '',
+      apiKey: process.env.MAILCHIMP_OAUTH_TOKEN || '',
       serverPrefix: 'us18', // Extracted from OAuth token
-      audienceId: mailchimpConfig.audience_id || process.env.MAILCHIMP_AUDIENCE_ID || '9a0d47ea7e',
-      retryAttempts: parseInt(mailchimpConfig.retry_attempts || process.env.MAILCHIMP_RETRY_ATTEMPTS || '2'),
-      contactStatus: mailchimpConfig.contact_status || process.env.MAILCHIMP_CONTACT_STATUS || 'subscribed'
+      audienceId: process.env.MAILCHIMP_AUDIENCE_ID || '9a0d47ea7e',
+      retryAttempts: parseInt(process.env.MAILCHIMP_RETRY_ATTEMPTS || '2'),
+      contactStatus: process.env.MAILCHIMP_CONTACT_STATUS || 'subscribed'
     };
 
     if (!this.apiKey) {

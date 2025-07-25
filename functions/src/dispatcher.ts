@@ -34,7 +34,13 @@ const setCorsHeaders = (res: any, origin: string | undefined) => {
   res.set('Vary', 'Origin');
 };
 
-export const cpayDispatcher = onRequest({ region: 'asia-southeast1' }, async (req, res) => {
+export const cpayDispatcher = onRequest({ 
+  region: 'asia-southeast1',
+  timeoutSeconds: 60,
+  memory: '256MiB',
+  minInstances: 0,
+  maxInstances: 10
+}, async (req, res) => {
   const startTime = Date.now();
   const origin = req.headers.origin;
   
