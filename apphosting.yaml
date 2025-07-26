@@ -44,21 +44,6 @@ env:
     value: "G-SHX94EGT2W"
   
   # ==================================================================
-  # FIREBASE ADMIN SDK CONFIGURATION (Server-side)
-  # ==================================================================
-  - name: "FIREBASE_PROJECT_ID"
-    value: "applez-dch9v"
-  - name: "GCP_PROJECT"
-    value: "applez-dch9v"
-  - name: "GCLOUD_PROJECT"
-    value: "applez-dch9v"
-  - name: "FIREBASE_CLIENT_EMAIL"
-    value: "firebase-adminsdk-fbsvc@applez-dch9v.iam.gserviceaccount.com"
-  # SECURITY: Use Google Secret Manager for private key in production
-  - name: "FIREBASE_PRIVATE_KEY"
-    value: "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDX47Ek8QYQTDXc\nhuYtpu8iNBN/p4u+K+lsvd3xAFmzSWjtHp0Ac0qrE5eb6rt7iaxTF36zV/T2nwq5\nRFcPnE57YulNzg5i4z7OERD2nog9zHYZnonRI6eFO0VxtnQZLSFj+4YdU1Acbgv/\nexCnNRPwzDgW8WH5OrbniAGhSRHgVVCcswrfemGSDk+5OYrbgK9W1Zm6EIqiiz0l\nOEASrecG3/KksD0zxe3eFSRZIwpoQ+HK7uRFrdZpZQdxs+jMp55XHV/RmrYOEcUf\nIh1ap/wyXu7vRUdtMDL9LmELYR7x60U6fcPAl8u20WZNx3C0pYFfOmLyI3VRy1HT\ng/02RlmPAgMBAAECggEAPzVXBC3dTKBDlNGaSvt5QFZm7xUrAP7yVPgyJwGnQarY\nobQ424zl67jMxsWvJrhkT9+tJO03t41RInUz2Eo3YEDRdgpChAlstgChKtO3qABZ\nA587UpRR09xKtMRqsYRZJmDaH3PpHKnLsX1intIXiIUCVxVNTh82tgtIDuTJ6xgF\nvGLb+WCpyYhegvlFHi8SmRwjySQq5BEnDuxOM4hlT0S62N/d/9MfyaZ3wMYjTIAZ\n6y6/G8N15qBDRgdZicD2VuQs8cjxJerF8BnD3jPRERpaxEW4LvcCcBsYltOVVMwI\nYfJ9OjTdU9VWCrzfEZ6UljstoiSpomvIwIfrDNeUgQKBgQD1WPPWV2u0qYDPI6R4\nIGfDcGc7qBaAGjSA395Tr4dxIXwRYnQuIXtEm/36yz0Gh6qL+RHa6mTv5S44RvIv\nUdTs2RSIIKzDA9xdJA0yLL7FKw+X5UJRoUvY3k1qqq2su5F2unh9m4KYHxa98ZAs\nKkhVgwX5kP9SO8BMGz6wptRcMQKBgQDhQ0/goskYrgi5sgeYy5XKAoTSqMqmriza\nsFwmWH7gvZrRws/mTax8yxslZty6doOVLPOUgN++8aPrNRMq+dsSFoXiBKL7wP2W\nKHKGNcKWVEW8WO81WNgcwr9VBkulVSAMU14j+xvTQaqfZMTg+nchqAPnM1JosED8\nslaKxpdhvwKBgDvfRjnjQYRn7OgfoY4zEj9OWdLkFQGT44Yjm4S+jAXejwFLDmEH\niKZYjuU53Z2PU94unN3YX2NvgRT4szc6+AQIgYsqth4s/gS4vIOnCbLh7D88EjAL\ndY/px+ik2BcT+s6HeMnmPjtTMuCNZ4pvkxFTFQ0vBi+SJz4rU+QWAjKxAoGABzi2\nNdhiJAVoSDO55J8aNTixc2Nv47oPvA8NVTlfD+tkLDdXnOV+kx2byC4tA1lLTJv9\nTxR2l9N9UswHykfqSwEn16AYbYO5XXf8e+r7SwB2n9wmBwrLGtjvc1VZVXqOJXcC\nvJqPQM2JH8UGPsQoz45oWaAekzabTr6U4awOLFcCgYEAq9f2HaiSxxjQRwKwiL0b\nOCvSK7I32vnCDg42/IBwhVee9Up5juofDaIs6JhXqr66VzbJxyURi06OCpN1ti0B\nK88cjSWyTF0wbTnMmXHnYrbNVQgeUCfszJmXi0ELDYM5H6onQf1HaLbaNelCT0aQ\nxrVEoi6W12vABeay/Ckq9KU=\n-----END PRIVATE KEY-----\n"
-  
-  # ==================================================================
   # ENVIRONMENT & PROJECT INFORMATION
   # ==================================================================
   - name: "NODE_ENV"
@@ -79,12 +64,8 @@ env:
   # ==================================================================
   # AI CONFIGURATION (CRITICAL: Replace with production keys)
   # ==================================================================
-  # Current: Development key - REPLACE FOR PRODUCTION
   - name: "GEMINI_API_KEY"
     value: "AIzaSyD7od9jyd2-nvTzBVNV-ssPGBDmw4ztKbY"
-  # SECURITY: Store in Google Secret Manager for production
-  - name: "OPENAI_API_KEY"
-    value: "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"
   
   # ==================================================================
   # CHANNEL AGGREGATOR CONFIGURATION (Payment Gateway)
@@ -93,7 +74,6 @@ env:
     value: "CPAY"
   - name: "CHANNEL_AGGREGATOR_MERCHANT_NO"
     value: "300000064613"
-  # Working development/testing key - consider production key if available
   - name: "CHANNEL_AGGREGATOR_SHA256_KEY"
     value: "uck6lo8sdjaarqf3sohdoovdvvn0kdnk"
   - name: "CHANNEL_AGGREGATOR_ENDPOINT"
@@ -102,18 +82,10 @@ env:
   # ==================================================================
   # PAYMENT GATEWAY INTEGRATIONS
   # ==================================================================
-  
-  # eMango Pay Configuration
-  # CRITICAL: Deploy Python microservice to Cloud Run and update this URL
-  # See: functions/src/integrations/Dockerfile for deployment instructions
   - name: "EMANGO_MICROSERVICE_URL"
-    value: "http://localhost:5000"  # Local dev fallback - DEPLOY TO CLOUD RUN
-  # May use same key as Channel Aggregator - verify with provider
+    value: "http://localhost:5000"
   - name: "EMANGO_SECRET_KEY"
     value: "uck6lo8sdjaarqf3sohdoovdvvn0kdnk"
-  
-  # SpeedyPay Configuration
-  # Working development/testing key - verify if production key needed
   - name: "SPEEDYPAY_SECRET_KEY"
     value: "uck6lo8sdjaarqf3sohdoovdvvn0kdnk"
   - name: "SPEEDYPAY_MERCHANT_SEQ"
@@ -130,11 +102,6 @@ env:
   # ==================================================================
   # EMAIL SERVICE CONFIGURATION (Mailchimp)
   # ==================================================================
-  # SECURITY: Replace with production Mailchimp credentials
-  - name: "MAILCHIMP_API_KEY"
-    value: "REPLACE_WITH_PRODUCTION_VALUE"
-  - name: "MAILCHIMP_OAUTH_TOKEN"
-    value: "REPLACE_WITH_PRODUCTION_VALUE"
   - name: "MAILCHIMP_SERVER_PREFIX"
     value: "us18"
   - name: "MAILCHIMP_AUDIENCE_ID"
@@ -151,16 +118,8 @@ env:
     value: "support@redapplex.com"
   
   # ==================================================================
-  # WEBHOOK SECURITY (CRITICAL: Replace all webhook secrets)
+  # WEBHOOK SECURITY
   # ==================================================================
-  - name: "INSTAPAY_WEBHOOK_SECRET"
-    value: "REPLACE_WITH_PRODUCTION_VALUE"
-  - name: "GCASH_WEBHOOK_SECRET"
-    value: "REPLACE_WITH_PRODUCTION_VALUE"
-  - name: "MAYA_WEBHOOK_SECRET"
-    value: "REPLACE_WITH_PRODUCTION_VALUE"
-  - name: "KOREAN_BANK_WEBHOOK_SECRET"
-    value: "REPLACE_WITH_PRODUCTION_VALUE"
   - name: "WEBHOOK_SECRET"
     value: "nXit5kgCtZkx+NIftusRzpTHwycamBcgDc2SWfVGxNM="
   - name: "WEBHOOK_TIMEOUT"
@@ -175,7 +134,6 @@ env:
     value: "true"
   - name: "ENABLE_WEBHOOK_VERIFICATION"
     value: "true"
-  # SECURITY: Generate strong production secrets
   - name: "JWT_SECRET"
     value: "1Hk2T6pWpHNGIQ0XwXBuUUm3fV2K0s1XxRbALxh3PnE="
   - name: "ENCRYPTION_KEY"
@@ -184,9 +142,6 @@ env:
   # ==================================================================
   # MONITORING AND LOGGING
   # ==================================================================
-  # SECURITY: Add production Sentry DSN for error tracking
-  - name: "SENTRY_DSN"
-    value: "REPLACE_WITH_PRODUCTION_VALUE"
   - name: "LOG_LEVEL"
     value: "info"
   
@@ -223,22 +178,3 @@ env:
     value: "daily"
   - name: "MINIMUM_SETTLEMENT_AMOUNT"
     value: "100000"
-  
-  # ==================================================================
-  # ADDITIONAL PRODUCTION VARIABLES
-  # ==================================================================
-  # SMS Service (for notifications)
-  - name: "SMS_API_KEY"
-    value: "REPLACE_WITH_PRODUCTION_VALUE"
-  
-  # Additional database connections if needed
-  - name: "DATABASE_URL"
-    value: "REPLACE_WITH_PRODUCTION_VALUE"
-  
-  # Twilio for SMS notifications (if implementing)
-  - name: "TWILIO_ACCOUNT_SID"
-    value: "REPLACE_WITH_PRODUCTION_VALUE"
-  - name: "TWILIO_AUTH_TOKEN"
-    value: "REPLACE_WITH_PRODUCTION_VALUE"
-  - name: "TWILIO_FROM_NUMBER"
-    value: "REPLACE_WITH_PRODUCTION_VALUE"
