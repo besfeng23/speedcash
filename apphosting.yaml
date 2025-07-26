@@ -26,155 +26,155 @@ env:
   # ==================================================================
   # FIREBASE CONFIGURATION (Public - Safe to include)
   # ==================================================================
-  - name: "NEXT_PUBLIC_FIREBASE_API_KEY"
+  - variable: "NEXT_PUBLIC_FIREBASE_API_KEY"
     value: "AIzaSyCWFnR9M_MCTmh0q5pmrrPSpmw36hoAOy0"
-  - name: "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN"
+  - variable: "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN"
     value: "applez-dch9v.firebaseapp.com"
-  - name: "NEXT_PUBLIC_FIREBASE_DATABASE_URL"
+  - variable: "NEXT_PUBLIC_FIREBASE_DATABASE_URL"
     value: "https://applez-dch9v-default-rtdb.asia-southeast1.firebasedatabase.app"
-  - name: "NEXT_PUBLIC_FIREBASE_PROJECT_ID"
+  - variable: "NEXT_PUBLIC_FIREBASE_PROJECT_ID"
     value: "applez-dch9v"
-  - name: "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET"
+  - variable: "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET"
     value: "applez-dch9v.firebasestorage.app"
-  - name: "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID"
+  - variable: "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID"
     value: "759830378563"
-  - name: "NEXT_PUBLIC_FIREBASE_APP_ID"
+  - variable: "NEXT_PUBLIC_FIREBASE_APP_ID"
     value: "1:759830378563:web:811b2bf8d6c11f9b80bcf6"
-  - name: "NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID"
+  - variable: "NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID"
     value: "G-SHX94EGT2W"
   
   # ==================================================================
   # ENVIRONMENT & PROJECT INFORMATION
   # ==================================================================
-  - name: "NODE_ENV"
+  - variable: "NODE_ENV"
     value: "production"
-  - name: "NEXT_PUBLIC_ENVIRONMENT"
+  - variable: "NEXT_PUBLIC_ENVIRONMENT"
     value: "production"
-  - name: "PROJECT_NAME"
+  - variable: "PROJECT_NAME"
     value: "applez"
-  - name: "PROJECT_NUMBER"
+  - variable: "PROJECT_NUMBER"
     value: "759830378563"
-  - name: "PARENT_ORG"
+  - variable: "PARENT_ORG"
     value: "redapplex.com"
-  - name: "SUPPORT_EMAIL"
+  - variable: "SUPPORT_EMAIL"
     value: "engage@redapplex.com"
-  - name: "APP_VERSION"
+  - variable: "APP_VERSION"
     value: "1.0.0"
   
   # ==================================================================
   # AI CONFIGURATION (CRITICAL: Replace with production keys)
   # ==================================================================
-  - name: "GEMINI_API_KEY"
+  - variable: "GEMINI_API_KEY"
     value: "AIzaSyD7od9jyd2-nvTzBVNV-ssPGBDmw4ztKbY"
   
   # ==================================================================
   # CHANNEL AGGREGATOR CONFIGURATION (Payment Gateway)
   # ==================================================================
-  - name: "CHANNEL_AGGREGATOR_MERCHANT_NAME"
+  - variable: "CHANNEL_AGGREGATOR_MERCHANT_NAME"
     value: "CPAY"
-  - name: "CHANNEL_AGGREGATOR_MERCHANT_NO"
+  - variable: "CHANNEL_AGGREGATOR_MERCHANT_NO"
     value: "300000064613"
-  - name: "CHANNEL_AGGREGATOR_SHA256_KEY"
+  - variable: "CHANNEL_AGGREGATOR_SHA256_KEY"
     value: "uck6lo8sdjaarqf3sohdoovdvvn0kdnk"
-  - name: "CHANNEL_AGGREGATOR_ENDPOINT"
+  - variable: "CHANNEL_AGGREGATOR_ENDPOINT"
     value: "https://api.channelaggregator.com"
   
   # ==================================================================
   # PAYMENT GATEWAY INTEGRATIONS
   # ==================================================================
-  - name: "EMANGO_MICROSERVICE_URL"
+  - variable: "EMANGO_MICROSERVICE_URL"
     value: "http://localhost:5000"
-  - name: "EMANGO_SECRET_KEY"
+  - variable: "EMANGO_SECRET_KEY"
     value: "uck6lo8sdjaarqf3sohdoovdvvn0kdnk"
-  - name: "SPEEDYPAY_SECRET_KEY"
+  - variable: "SPEEDYPAY_SECRET_KEY"
     value: "uck6lo8sdjaarqf3sohdoovdvvn0kdnk"
-  - name: "SPEEDYPAY_MERCHANT_SEQ"
+  - variable: "SPEEDYPAY_MERCHANT_SEQ"
     value: "300000064613"
   
   # ==================================================================
   # API BASE URLS (Production endpoints)
   # ==================================================================
-  - name: "NEXT_PUBLIC_API_BASE_URL"
+  - variable: "NEXT_PUBLIC_API_BASE_URL"
     value: "https://asia-southeast1-applez-dch9v.cloudfunctions.net"
-  - name: "NEXT_PUBLIC_BASE_URL"
+  - variable: "NEXT_PUBLIC_BASE_URL"
     value: "https://applez-dch9v.web.app"
   
   # ==================================================================
   # EMAIL SERVICE CONFIGURATION (Mailchimp)
   # ==================================================================
-  - name: "MAILCHIMP_SERVER_PREFIX"
+  - variable: "MAILCHIMP_SERVER_PREFIX"
     value: "us18"
-  - name: "MAILCHIMP_AUDIENCE_ID"
+  - variable: "MAILCHIMP_AUDIENCE_ID"
     value: "9a0d47ea7e"
-  - name: "MAILCHIMP_RETRY_ATTEMPTS"
+  - variable: "MAILCHIMP_RETRY_ATTEMPTS"
     value: "2"
-  - name: "MAILCHIMP_CONTACT_STATUS"
+  - variable: "MAILCHIMP_CONTACT_STATUS"
     value: "subscribed"
-  - name: "FROM_EMAIL"
+  - variable: "FROM_EMAIL"
     value: "noreply@redapplex.com"
-  - name: "FROM_NAME"
+  - variable: "FROM_NAME"
     value: "CPay"
-  - name: "REPLY_TO_EMAIL"
+  - variable: "REPLY_TO_EMAIL"
     value: "support@redapplex.com"
   
   # ==================================================================
   # WEBHOOK SECURITY
   # ==================================================================
-  - name: "WEBHOOK_SECRET"
+  - variable: "WEBHOOK_SECRET"
     value: "nXit5kgCtZkx+NIftusRzpTHwycamBcgDc2SWfVGxNM="
-  - name: "WEBHOOK_TIMEOUT"
+  - variable: "WEBHOOK_TIMEOUT"
     value: "30000"
   
   # ==================================================================
   # SECURITY CONFIGURATION
   # ==================================================================
-  - name: "ENABLE_RATE_LIMITING"
+  - variable: "ENABLE_RATE_LIMITING"
     value: "true"
-  - name: "ENABLE_2FA"
+  - variable: "ENABLE_2FA"
     value: "true"
-  - name: "ENABLE_WEBHOOK_VERIFICATION"
+  - variable: "ENABLE_WEBHOOK_VERIFICATION"
     value: "true"
-  - name: "JWT_SECRET"
+  - variable: "JWT_SECRET"
     value: "1Hk2T6pWpHNGIQ0XwXBuUUm3fV2K0s1XxRbALxh3PnE="
-  - name: "ENCRYPTION_KEY"
+  - variable: "ENCRYPTION_KEY"
     value: "Em0m8jI7p2wPrnAVLPx/hfxIKJUmtgblaZo5uEtQ++c="
   
   # ==================================================================
   # MONITORING AND LOGGING
   # ==================================================================
-  - name: "LOG_LEVEL"
+  - variable: "LOG_LEVEL"
     value: "info"
   
   # ==================================================================
   # FEATURE FLAGS (Production settings)
   # ==================================================================
-  - name: "ENABLE_KYC"
+  - variable: "ENABLE_KYC"
     value: "true"
-  - name: "ENABLE_AI_ASSISTANT"
+  - variable: "ENABLE_AI_ASSISTANT"
     value: "true"
-  - name: "ENABLE_PARTNER_INTEGRATIONS"
+  - variable: "ENABLE_PARTNER_INTEGRATIONS"
     value: "true"
-  - name: "ENABLE_PAYMENT_GATEWAYS"
+  - variable: "ENABLE_PAYMENT_GATEWAYS"
     value: "true"
-  - name: "ENABLE_KOREAN_MALL_INTEGRATION"
+  - variable: "ENABLE_KOREAN_MALL_INTEGRATION"
     value: "true"
   
   # ==================================================================
   # PERFORMANCE CONFIGURATION
   # ==================================================================
-  - name: "CACHE_TTL"
+  - variable: "CACHE_TTL"
     value: "3600"
-  - name: "RATE_LIMIT_WINDOW"
+  - variable: "RATE_LIMIT_WINDOW"
     value: "900000"
-  - name: "RATE_LIMIT_MAX_REQUESTS"
+  - variable: "RATE_LIMIT_MAX_REQUESTS"
     value: "100"
   
   # ==================================================================
   # SETTLEMENT CONFIGURATION
   # ==================================================================
-  - name: "AUTO_SETTLEMENT_ENABLED"
+  - variable: "AUTO_SETTLEMENT_ENABLED"
     value: "true"
-  - name: "SETTLEMENT_FREQUENCY"
+  - variable: "SETTLEMENT_FREQUENCY"
     value: "daily"
-  - name: "MINIMUM_SETTLEMENT_AMOUNT"
+  - variable: "MINIMUM_SETTLEMENT_AMOUNT"
     value: "100000"
