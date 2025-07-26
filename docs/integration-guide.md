@@ -49,24 +49,59 @@ Welcome to the CPay Integration Guide! This comprehensive guide will help you in
 
 All API requests require authentication using your API secret key.
 
-### Node.js Example
+### Direct API Call Example
 ```javascript
-const { CPaySDK } = require('@cpay/nodejs-sdk');
+const CPAY_API_URL = 'https://asia-southeast1-applez-dch9v.cloudfunctions.net/cpayDispatcher';
 
-const cpay = new CPaySDK({
-  secretKey: 'sk_test_your_secret_key_here',
-  environment: 'test' // or 'live'
-});
+async function callCPayAPI(action, payload, authToken) {
+  const response = await fetch(CPAY_API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${authToken}` // Firebase Auth token
+    },
+    body: JSON.stringify({
+      action: action,
+      payload: payload
+    })
+  });
+  
+  if (!response.ok) {
+    throw new Error(`CPay API error: ${response.status}`);
+  }
+  
+  return response.json();
+}
 ```
 
-### Python Example
-```python
-from cpay import CPaySDK
+### Node.js Helper Class
+```javascript
+class CPayAPI {
+  constructor(baseURL = 'https://asia-southeast1-applez-dch9v.cloudfunctions.net/cpayDispatcher') {
+    this.baseURL = baseURL;
+  }
+  
+  async request(action, payload, authToken) {
+    const response = await fetch(this.baseURL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      },
+      body: JSON.stringify({ action, payload })
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || 'API request failed');
+    }
+    
+    return data;
+  }
+}
 
-cpay = CPaySDK(
-    secret_key='sk_test_your_secret_key_here',
-    environment='test'  # or 'live'
-)
+const cpay = new CPayAPI();
 ```
 
 ## SDK Installation
@@ -133,7 +168,10 @@ if (!isConnected) {
 
 ```javascript
 // Get wallet balance
-const balance = await cpay.getWalletBalance('user_123');
+const balance = await cpay.request('getWalletBalance', {
+  uid: 'user_123'
+}, userAuthToken);
+
 console.log('Balance:', balance.balances);
 // Output: { PHP: 15000.50, KRW: 250000 }
 ```
@@ -141,8 +179,11 @@ console.log('Balance:', balance.balances);
 ### 3. Get User Profile
 
 ```javascript
-// Get user profile
-const profile = await cpay.getUserProfile('user_123');
+// Get user profile  
+const profile = await cpay.request('getUserProfile', {
+  uid: 'user_123'
+}, userAuthToken);
+
 console.log('Profile:', profile);
 // Output: { uid: 'user_123', displayName: 'John Doe', email: 'john@example.com', ... }
 ```
@@ -153,23 +194,23 @@ console.log('Profile:', profile);
 
 ```javascript
 // Send money to another user
-const transaction = await cpay.initiateP2PTransfer({
+const transaction = await cpay.request('initiateP2PTransfer', {
   senderUid: 'user_123',
   receiverMobileNumber: '+639123456789',
   amount: 1000,
   currency: 'PHP',
   description: 'Payment for services'
-});
+}, userAuthToken);
 
 console.log('Transaction:', transaction);
-// Output: { id: 'txn_123', status: 'PENDING', ... }
+// Output: { transactionId: 'txn_123', status: 'PENDING', ... }
 ```
 
 ### Bank Transfer (InstaPay)
 
 ```javascript
 // Send money to any Philippine bank
-const transaction = await cpay.initiateInstaPayTransfer({
+const transaction = await cpay.request('initiateInstaPayTransfer', {
   uid: 'user_123',
   amount: 1500,
   currency: 'PHP',
@@ -177,14 +218,14 @@ const transaction = await cpay.initiateInstaPayTransfer({
   accountNumber: '1234567890',
   accountName: 'Jane Smith',
   description: 'Payment for goods'
-});
+}, userAuthToken);
 ```
 
 ### International Remittance
 
 ```javascript
 // Send money to Korea
-const transaction = await cpay.initiateRemittance({
+const transaction = await cpay.request('initiateRemittance', {
   uid: 'user_123',
   amount: 50000,
   currency: 'PHP',
@@ -195,14 +236,14 @@ const transaction = await cpay.initiateRemittance({
   recipientAccount: '123-456-789012',
   purpose: 'Family support',
   description: 'Monthly remittance to family'
-});
+}, userAuthToken);
 ```
 
 ### Bill Payment
 
 ```javascript
 // Pay utility bills
-const transaction = await cpay.initiateBillPayment({
+const transaction = await cpay.request('initiateBillPayment', {
   uid: 'user_123',
   amount: 2500,
   currency: 'PHP',
@@ -211,21 +252,21 @@ const transaction = await cpay.initiateBillPayment({
   accountNumber: '1234567890',
   customerName: 'John Doe',
   dueDate: '2024-01-15'
-});
+}, userAuthToken);
 ```
 
 ### Mobile Load Purchase
 
 ```javascript
 // Buy mobile load
-const transaction = await cpay.initiateBuyLoad({
+const transaction = await cpay.request('initiateBuyLoad', {
   uid: 'user_123',
   amount: 100,
   currency: 'PHP',
   mobileNumber: '+639123456789',
   provider: 'Smart',
   loadType: 'Regular'
-});
+}, userAuthToken);
 ```
 
 ## Webhook Integration
