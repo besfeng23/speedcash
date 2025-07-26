@@ -4,7 +4,9 @@
 runConfig:
   # Increase this value if you'd like to automatically spin up
   # more instances in response to increased traffic.
-  maxInstances: 1
+  maxInstances: 3
+  # Minimum instances to keep warm (reduces cold starts)
+  minInstances: 1
 
 # Ensure SSR is used instead of static export
 buildConfig:
@@ -13,104 +15,230 @@ buildConfig:
   outputDirectory: .next
   nodeVersion: 18
 
-# Environment variables for the backend
+# ==================================================================
+# ENVIRONMENT VARIABLES FOR PRODUCTION DEPLOYMENT
+# ==================================================================
+# SECURITY NOTE: Replace all placeholder values marked with
+# "REPLACE_WITH_PRODUCTION_VALUE" before deploying to production
+# ==================================================================
+
 env:
-  # Firebase Configuration
-  NEXT_PUBLIC_FIREBASE_API_KEY: "AIzaSyCWFnR9M_MCTmh0q5pmrrPSpmw36hoAOy0"
-  NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: "applez-dch9v.firebaseapp.com"
-  NEXT_PUBLIC_FIREBASE_DATABASE_URL: "https://applez-dch9v-default-rtdb.asia-southeast1.firebasedatabase.app"
-  NEXT_PUBLIC_FIREBASE_PROJECT_ID: "applez-dch9v"
-  NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: "applez-dch9v.firebasestorage.app"
-  NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "759830378563"
-  NEXT_PUBLIC_FIREBASE_APP_ID: "1:759830378563:web:811b2bf8d6c11f9b80bcf6"
-  NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: "G-SHX94EGT2W"
+  # ==================================================================
+  # FIREBASE CONFIGURATION (Public - Safe to include)
+  # ==================================================================
+  - name: "NEXT_PUBLIC_FIREBASE_API_KEY"
+    value: "AIzaSyCWFnR9M_MCTmh0q5pmrrPSpmw36hoAOy0"
+  - name: "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN"
+    value: "applez-dch9v.firebaseapp.com"
+  - name: "NEXT_PUBLIC_FIREBASE_DATABASE_URL"
+    value: "https://applez-dch9v-default-rtdb.asia-southeast1.firebasedatabase.app"
+  - name: "NEXT_PUBLIC_FIREBASE_PROJECT_ID"
+    value: "applez-dch9v"
+  - name: "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET"
+    value: "applez-dch9v.firebasestorage.app"
+  - name: "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID"
+    value: "759830378563"
+  - name: "NEXT_PUBLIC_FIREBASE_APP_ID"
+    value: "1:759830378563:web:811b2bf8d6c11f9b80bcf6"
+  - name: "NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID"
+    value: "G-SHX94EGT2W"
   
-  # Firebase Admin Configuration
-  FIREBASE_PROJECT_ID: "applez-dch9v"
-  FIREBASE_CLIENT_EMAIL: "firebase-adminsdk-xxxxx@applez-dch9v.iam.gserviceaccount.com"
-  FIREBASE_PRIVATE_KEY: "-----BEGIN PRIVATE KEY-----\nYOUR_PRIVATE_KEY_HERE\n-----END PRIVATE KEY-----\n"
+  # ==================================================================
+  # FIREBASE ADMIN SDK CONFIGURATION (Server-side)
+  # ==================================================================
+  - name: "FIREBASE_PROJECT_ID"
+    value: "applez-dch9v"
+  - name: "GCP_PROJECT"
+    value: "applez-dch9v"
+  - name: "GCLOUD_PROJECT"
+    value: "applez-dch9v"
+  - name: "FIREBASE_CLIENT_EMAIL"
+    value: "firebase-adminsdk-fbsvc@applez-dch9v.iam.gserviceaccount.com"
+  # SECURITY: Use Google Secret Manager for private key in production
+  - name: "FIREBASE_PRIVATE_KEY"
+    value: "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDX47Ek8QYQTDXc\nhuYtpu8iNBN/p4u+K+lsvd3xAFmzSWjtHp0Ac0qrE5eb6rt7iaxTF36zV/T2nwq5\nRFcPnE57YulNzg5i4z7OERD2nog9zHYZnonRI6eFO0VxtnQZLSFj+4YdU1Acbgv/\nexCnNRPwzDgW8WH5OrbniAGhSRHgVVCcswrfemGSDk+5OYrbgK9W1Zm6EIqiiz0l\nOEASrecG3/KksD0zxe3eFSRZIwpoQ+HK7uRFrdZpZQdxs+jMp55XHV/RmrYOEcUf\nIh1ap/wyXu7vRUdtMDL9LmELYR7x60U6fcPAl8u20WZNx3C0pYFfOmLyI3VRy1HT\ng/02RlmPAgMBAAECggEAPzVXBC3dTKBDlNGaSvt5QFZm7xUrAP7yVPgyJwGnQarY\nobQ424zl67jMxsWvJrhkT9+tJO03t41RInUz2Eo3YEDRdgpChAlstgChKtO3qABZ\nA587UpRR09xKtMRqsYRZJmDaH3PpHKnLsX1intIXiIUCVxVNTh82tgtIDuTJ6xgF\nvGLb+WCpyYhegvlFHi8SmRwjySQq5BEnDuxOM4hlT0S62N/d/9MfyaZ3wMYjTIAZ\n6y6/G8N15qBDRgdZicD2VuQs8cjxJerF8BnD3jPRERpaxEW4LvcCcBsYltOVVMwI\nYfJ9OjTdU9VWCrzfEZ6UljstoiSpomvIwIfrDNeUgQKBgQD1WPPWV2u0qYDPI6R4\nIGfDcGc7qBaAGjSA395Tr4dxIXwRYnQuIXtEm/36yz0Gh6qL+RHa6mTv5S44RvIv\nUdTs2RSIIKzDA9xdJA0yLL7FKw+X5UJRoUvY3k1qqq2su5F2unh9m4KYHxa98ZAs\nKkhVgwX5kP9SO8BMGz6wptRcMQKBgQDhQ0/goskYrgi5sgeYy5XKAoTSqMqmriza\nsFwmWH7gvZrRws/mTax8yxslZty6doOVLPOUgN++8aPrNRMq+dsSFoXiBKL7wP2W\nKHKGNcKWVEW8WO81WNgcwr9VBkulVSAMU14j+xvTQaqfZMTg+nchqAPnM1JosED8\nslaKxpdhvwKBgDvfRjnjQYRn7OgfoY4zEj9OWdLkFQGT44Yjm4S+jAXejwFLDmEH\niKZYjuU53Z2PU94unN3YX2NvgRT4szc6+AQIgYsqth4s/gS4vIOnCbLh7D88EjAL\ndY/px+ik2BcT+s6HeMnmPjtTMuCNZ4pvkxFTFQ0vBi+SJz4rU+QWAjKxAoGABzi2\nNdhiJAVoSDO55J8aNTixc2Nv47oPvA8NVTlfD+tkLDdXnOV+kx2byC4tA1lLTJv9\nTxR2l9N9UswHykfqSwEn16AYbYO5XXf8e+r7SwB2n9wmBwrLGtjvc1VZVXqOJXcC\nvJqPQM2JH8UGPsQoz45oWaAekzabTr6U4awOLFcCgYEAq9f2HaiSxxjQRwKwiL0b\nOCvSK7I32vnCDg42/IBwhVee9Up5juofDaIs6JhXqr66VzbJxyURi06OCpN1ti0B\nK88cjSWyTF0wbTnMmXHnYrbNVQgeUCfszJmXi0ELDYM5H6onQf1HaLbaNelCT0aQ\nxrVEoi6W12vABeay/Ckq9KU=\n-----END PRIVATE KEY-----\n"
   
-  # Environment
-  NODE_ENV: "production"
-  NEXT_PUBLIC_ENVIRONMENT: "production"
+  # ==================================================================
+  # ENVIRONMENT & PROJECT INFORMATION
+  # ==================================================================
+  - name: "NODE_ENV"
+    value: "production"
+  - name: "NEXT_PUBLIC_ENVIRONMENT"
+    value: "production"
+  - name: "PROJECT_NAME"
+    value: "applez"
+  - name: "PROJECT_NUMBER"
+    value: "759830378563"
+  - name: "PARENT_ORG"
+    value: "redapplex.com"
+  - name: "SUPPORT_EMAIL"
+    value: "engage@redapplex.com"
+  - name: "APP_VERSION"
+    value: "1.0.0"
   
-  # Project Information
-  PROJECT_NAME: "applez"
-  PROJECT_NUMBER: "759830378563"
-  PARENT_ORG: "redapplex.com"
-  SUPPORT_EMAIL: "engage@redapplex.com"
+  # ==================================================================
+  # AI CONFIGURATION (CRITICAL: Replace with production keys)
+  # ==================================================================
+  # Current: Development key - REPLACE FOR PRODUCTION
+  - name: "GEMINI_API_KEY"
+    value: "AIzaSyD7od9jyd2-nvTzBVNV-ssPGBDmw4ztKbY"
+  # SECURITY: Store in Google Secret Manager for production
+  - name: "OPENAI_API_KEY"
+    value: "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"
   
-  # AI Configuration
-  GEMINI_API_KEY: "AIzaSyD7od9jyd2-nvTzBVNV-ssPGBDmw4ztKbY"
-  OPENAI_API_KEY: "your_openai_api_key_here"
+  # ==================================================================
+  # CHANNEL AGGREGATOR CONFIGURATION (Payment Gateway)
+  # ==================================================================
+  - name: "CHANNEL_AGGREGATOR_MERCHANT_NAME"
+    value: "CPAY"
+  - name: "CHANNEL_AGGREGATOR_MERCHANT_NO"
+    value: "300000064613"
+  # Working development/testing key - consider production key if available
+  - name: "CHANNEL_AGGREGATOR_SHA256_KEY"
+    value: "uck6lo8sdjaarqf3sohdoovdvvn0kdnk"
+  - name: "CHANNEL_AGGREGATOR_ENDPOINT"
+    value: "https://api.channelaggregator.com"
   
-  # Channel Aggregator Configuration
-  CHANNEL_AGGREGATOR_MERCHANT_NAME: "CPAY"
-  CHANNEL_AGGREGATOR_MERCHANT_NO: "300000064613"
-  CHANNEL_AGGREGATOR_SHA256_KEY: "uck6lo8sdjaarqf3sohdoovdvvn0kdnk"
-  CHANNEL_AGGREGATOR_ENDPOINT: "https://api.channelaggregator.com"
+  # ==================================================================
+  # PAYMENT GATEWAY INTEGRATIONS
+  # ==================================================================
   
   # eMango Pay Configuration
-  EMANGO_MICROSERVICE_URL: "http://localhost:5000"
+  # CRITICAL: Deploy Python microservice to Cloud Run and update this URL
+  # See: functions/src/integrations/Dockerfile for deployment instructions
+  - name: "EMANGO_MICROSERVICE_URL"
+    value: "http://localhost:5000"  # Local dev fallback - DEPLOY TO CLOUD RUN
+  # May use same key as Channel Aggregator - verify with provider
+  - name: "EMANGO_SECRET_KEY"
+    value: "uck6lo8sdjaarqf3sohdoovdvvn0kdnk"
   
   # SpeedyPay Configuration
-  SPEEDYPAY_SECRET_KEY: "uck6lo8sdjaarqf3sohdoovdvvn0kdnk"
-  SPEEDYPAY_MERCHANT_SEQ: "300000064613"
+  # Working development/testing key - verify if production key needed
+  - name: "SPEEDYPAY_SECRET_KEY"
+    value: "uck6lo8sdjaarqf3sohdoovdvvn0kdnk"
+  - name: "SPEEDYPAY_MERCHANT_SEQ"
+    value: "300000064613"
   
-  # API Base URLs
-  NEXT_PUBLIC_API_BASE_URL: "https://asia-southeast1-applez-dch9v.cloudfunctions.net"
-  NEXT_PUBLIC_BASE_URL: "https://applez-dch9v.web.app"
+  # ==================================================================
+  # API BASE URLS (Production endpoints)
+  # ==================================================================
+  - name: "NEXT_PUBLIC_API_BASE_URL"
+    value: "https://asia-southeast1-applez-dch9v.cloudfunctions.net"
+  - name: "NEXT_PUBLIC_BASE_URL"
+    value: "https://applez-dch9v.web.app"
   
-  # Email Service Configuration (Mailchimp)
-  MAILCHIMP_API_KEY: "your_mailchimp_api_key_here"
-  MAILCHIMP_OAUTH_TOKEN: "your_mailchimp_oauth_token_here"
-  MAILCHIMP_SERVER_PREFIX: "us1"
-  MAILCHIMP_AUDIENCE_ID: "9a0d47ea7e"
-  MAILCHIMP_RETRY_ATTEMPTS: "2"
-  MAILCHIMP_CONTACT_STATUS: "subscribed"
-  FROM_EMAIL: "noreply@redapplex.com"
-  FROM_NAME: "CPay"
-  REPLY_TO_EMAIL: "support@redapplex.com"
+  # ==================================================================
+  # EMAIL SERVICE CONFIGURATION (Mailchimp)
+  # ==================================================================
+  # SECURITY: Replace with production Mailchimp credentials
+  - name: "MAILCHIMP_API_KEY"
+    value: "REPLACE_WITH_PRODUCTION_VALUE"
+  - name: "MAILCHIMP_OAUTH_TOKEN"
+    value: "REPLACE_WITH_PRODUCTION_VALUE"
+  - name: "MAILCHIMP_SERVER_PREFIX"
+    value: "us18"
+  - name: "MAILCHIMP_AUDIENCE_ID"
+    value: "9a0d47ea7e"
+  - name: "MAILCHIMP_RETRY_ATTEMPTS"
+    value: "2"
+  - name: "MAILCHIMP_CONTACT_STATUS"
+    value: "subscribed"
+  - name: "FROM_EMAIL"
+    value: "noreply@redapplex.com"
+  - name: "FROM_NAME"
+    value: "CPay"
+  - name: "REPLY_TO_EMAIL"
+    value: "support@redapplex.com"
   
-  # Webhook Security
-  INSTAPAY_WEBHOOK_SECRET: "your_instapay_webhook_secret_here"
-  GCASH_WEBHOOK_SECRET: "your_gcash_webhook_secret_here"
-  MAYA_WEBHOOK_SECRET: "your_maya_webhook_secret_here"
-  KOREAN_BANK_WEBHOOK_SECRET: "your_korean_bank_webhook_secret_here"
-  WEBHOOK_SECRET: "your_generic_webhook_secret_here"
+  # ==================================================================
+  # WEBHOOK SECURITY (CRITICAL: Replace all webhook secrets)
+  # ==================================================================
+  - name: "INSTAPAY_WEBHOOK_SECRET"
+    value: "REPLACE_WITH_PRODUCTION_VALUE"
+  - name: "GCASH_WEBHOOK_SECRET"
+    value: "REPLACE_WITH_PRODUCTION_VALUE"
+  - name: "MAYA_WEBHOOK_SECRET"
+    value: "REPLACE_WITH_PRODUCTION_VALUE"
+  - name: "KOREAN_BANK_WEBHOOK_SECRET"
+    value: "REPLACE_WITH_PRODUCTION_VALUE"
+  - name: "WEBHOOK_SECRET"
+    value: "nXit5kgCtZkx+NIftusRzpTHwycamBcgDc2SWfVGxNM="
+  - name: "WEBHOOK_TIMEOUT"
+    value: "30000"
   
-  # Security Configuration
-  ENABLE_RATE_LIMITING: "true"
-  ENABLE_2FA: "true"
-  ENABLE_WEBHOOK_VERIFICATION: "true"
+  # ==================================================================
+  # SECURITY CONFIGURATION
+  # ==================================================================
+  - name: "ENABLE_RATE_LIMITING"
+    value: "true"
+  - name: "ENABLE_2FA"
+    value: "true"
+  - name: "ENABLE_WEBHOOK_VERIFICATION"
+    value: "true"
+  # SECURITY: Generate strong production secrets
+  - name: "JWT_SECRET"
+    value: "1Hk2T6pWpHNGIQ0XwXBuUUm3fV2K0s1XxRbALxh3PnE="
+  - name: "ENCRYPTION_KEY"
+    value: "Em0m8jI7p2wPrnAVLPx/hfxIKJUmtgblaZo5uEtQ++c="
   
-  # Monitoring and Logging
-  SENTRY_DSN: "your_sentry_dsn_here"
-  LOG_LEVEL: "info"
+  # ==================================================================
+  # MONITORING AND LOGGING
+  # ==================================================================
+  # SECURITY: Add production Sentry DSN for error tracking
+  - name: "SENTRY_DSN"
+    value: "REPLACE_WITH_PRODUCTION_VALUE"
+  - name: "LOG_LEVEL"
+    value: "info"
   
-  # Security
-  JWT_SECRET: "your_jwt_secret_here"
-  ENCRYPTION_KEY: "your_encryption_key_here"
+  # ==================================================================
+  # FEATURE FLAGS (Production settings)
+  # ==================================================================
+  - name: "ENABLE_KYC"
+    value: "true"
+  - name: "ENABLE_AI_ASSISTANT"
+    value: "true"
+  - name: "ENABLE_PARTNER_INTEGRATIONS"
+    value: "true"
+  - name: "ENABLE_PAYMENT_GATEWAYS"
+    value: "true"
+  - name: "ENABLE_KOREAN_MALL_INTEGRATION"
+    value: "true"
   
-  # Feature Flags
-  ENABLE_KYC: "true"
-  ENABLE_AI_ASSISTANT: "true"
-  ENABLE_PARTNER_INTEGRATIONS: "true"
-  ENABLE_PAYMENT_GATEWAYS: "true"
-  ENABLE_KOREAN_MALL_INTEGRATION: "true"
+  # ==================================================================
+  # PERFORMANCE CONFIGURATION
+  # ==================================================================
+  - name: "CACHE_TTL"
+    value: "3600"
+  - name: "RATE_LIMIT_WINDOW"
+    value: "900000"
+  - name: "RATE_LIMIT_MAX_REQUESTS"
+    value: "100"
   
-  # Performance
-  CACHE_TTL: "3600"
-  RATE_LIMIT_WINDOW: "900000"
-  RATE_LIMIT_MAX_REQUESTS: "100"
+  # ==================================================================
+  # SETTLEMENT CONFIGURATION
+  # ==================================================================
+  - name: "AUTO_SETTLEMENT_ENABLED"
+    value: "true"
+  - name: "SETTLEMENT_FREQUENCY"
+    value: "daily"
+  - name: "MINIMUM_SETTLEMENT_AMOUNT"
+    value: "100000"
   
-  # Webhook Configuration
-  WEBHOOK_TIMEOUT: "30000"
+  # ==================================================================
+  # ADDITIONAL PRODUCTION VARIABLES
+  # ==================================================================
+  # SMS Service (for notifications)
+  - name: "SMS_API_KEY"
+    value: "REPLACE_WITH_PRODUCTION_VALUE"
   
-  # Settlement Configuration
-  AUTO_SETTLEMENT_ENABLED: "true"
-  SETTLEMENT_FREQUENCY: "daily"
-  MINIMUM_SETTLEMENT_AMOUNT: "100000"
+  # Additional database connections if needed
+  - name: "DATABASE_URL"
+    value: "REPLACE_WITH_PRODUCTION_VALUE"
   
-  # App Version
-  APP_VERSION: "1.0.0"
+  # Twilio for SMS notifications (if implementing)
+  - name: "TWILIO_ACCOUNT_SID"
+    value: "REPLACE_WITH_PRODUCTION_VALUE"
+  - name: "TWILIO_AUTH_TOKEN"
+    value: "REPLACE_WITH_PRODUCTION_VALUE"
+  - name: "TWILIO_FROM_NUMBER"
+    value: "REPLACE_WITH_PRODUCTION_VALUE"
