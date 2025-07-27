@@ -53,7 +53,7 @@ export default function PartnerDashboard() {
     undefined,
     { 
       enabled: !!user, 
-      select: (data: any) => ({ transactions: data.transactions.slice(0, 4) }),
+      select: (data: { transactions: Transaction[] }) => ({ transactions: data.transactions.slice(0, 4) }),
       queryKey: ['partnerGetDashboardStats', 'recent']
     }
   );
@@ -178,7 +178,7 @@ export default function PartnerDashboard() {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      recentPayouts.map((payout: any) => (
+                      recentPayouts.map((payout: Transaction) => (
                         <TableRow key={payout.id}>
                             <TableCell className="font-mono text-xs font-medium">{payout.id.substring(0, 10)}...</TableCell>
                             <TableCell>{payout.currency} {payout.amount.toLocaleString('en-US', {minimumFractionDigits: 2})}</TableCell>

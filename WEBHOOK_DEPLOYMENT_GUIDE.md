@@ -110,7 +110,7 @@ firebase functions:config:set speedypay.secret_key="uck6lo8sdjaarqf3sohdoovdvvn0
 firebase functions:config:set speedypay.merchant_seq="300000064613"
 
 # Webhook URL
-firebase functions:config:set speedypay.webhook_url="https://us-central1-applez-dch9v.cloudfunctions.net/speedypayWebhook"
+firebase functions:config:set speedypay.webhook_url="https://asia-southeast1-applez-dch9v.cloudfunctions.net/speedypayWebhook"
 ```
 
 ### **2. Verify Configuration**
@@ -129,19 +129,19 @@ firebase functions:list
 ### **2. Update SpeedyPay Dashboard**
 Configure the webhook URL in your SpeedyPay dashboard:
 ```
-https://us-central1-applez-dch9v.cloudfunctions.net/speedypayWebhook
+https://asia-southeast1-applez-dch9v.cloudfunctions.net/speedypayWebhook
 ```
 
 ## 🧪 **Testing Deployment**
 
 ### **1. Test Health Check**
 ```bash
-curl -X GET "https://us-central1-applez-dch9v.cloudfunctions.net/speedypayWebhookHealth"
+curl -X GET "https://asia-southeast1-applez-dch9v.cloudfunctions.net/speedypayWebhookHealth"
 ```
 
 ### **2. Test Webhook Endpoint**
 ```bash
-curl -X POST "https://us-central1-applez-dch9v.cloudfunctions.net/speedypayWebhook" \
+curl -X POST "https://asia-southeast1-applez-dch9v.cloudfunctions.net/speedypayWebhook" \
   -H "Content-Type: application/json" \
   -d '{
     "signType": "SHA256",

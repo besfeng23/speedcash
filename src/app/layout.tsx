@@ -8,5 +8,11 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
-  return <ClientRoot>{children}</ClientRoot>;
+  return (
+    <html lang="en">
+      <body>
+        <ClientRoot>{children}</ClientRoot>
+      </body>
+    </html>
+  );
 }

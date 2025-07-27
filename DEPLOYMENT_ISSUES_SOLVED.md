@@ -29,7 +29,7 @@
     "codebase": "default",
     "runtime": "nodejs20",
     "ignore": ["node_modules", ".git", "firebase-debug.log", "firebase-debug.*.log"],
-    "region": "us-central1",
+    "region": "asia-southeast1",
     "secrets": ["POSTMARK_API_KEY", "PAYMENT_GATEWAY_SECRET"]
   }
 }
@@ -49,7 +49,7 @@
 - ✅ Improved error handling and logging
 - ✅ Removed CORS proxy (not needed for Firebase Functions)
 
-**New URL**: `https://us-central1-applez-dch9v.cloudfunctions.net/cpayDispatcher`
+**New URL**: `https://asia-southeast1-applez-dch9v.cloudfunctions.net/cpayDispatcher`
 
 ---
 
@@ -72,7 +72,7 @@ npx firebase functions:log --only cpayDispatcher
 ### **Step 3: Test Authentication**
 ```bash
 # Test with curl (replace YOUR_ID_TOKEN with actual Firebase ID token)
-curl -X POST https://us-central1-applez-dch9v.cloudfunctions.net/cpayDispatcher \
+curl -X POST https://asia-southeast1-applez-dch9v.cloudfunctions.net/cpayDispatcher \
 -H "Content-Type: application/json" \
 -H "Authorization: Bearer YOUR_ID_TOKEN" \
 -d '{

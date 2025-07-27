@@ -3,13 +3,13 @@ export interface Organization {
   name: string;
   ownerId: string;
   members: string[];
-  createdAt: any; // Or use a proper Timestamp type
+  createdAt: unknown; // Or use a proper Timestamp type
 }
 
 export interface ApiLog {
   id: string;
   organizationId: string;
   userId: string;
-  timestamp: any; // Or a proper Timestamp type
+  timestamp: unknown; // Or a proper Timestamp type
   // ... other log fields
 } 

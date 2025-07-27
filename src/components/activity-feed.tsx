@@ -20,7 +20,7 @@ type Transaction = {
   userId: string;
   senderInfo?: { uid: string };
   receiverInfo?: { uid: string };
-  details?: any;
+  details?: unknown;
 };
 
 const getTransactionIcon = (type: string) => {
@@ -37,9 +37,9 @@ const formatTransactionTitle = (tx: Transaction, currentUid: string) => {
     case 'p2p_transfer':
       return isSender ? 'P2P Transfer to' : 'P2P Transfer from';
     case 'cash_in':
-      return `Cash-In via ${tx.details?.method || 'source'}`;
+      return `Cash-In via ${(tx.details as any)?.method || 'source'}`;
     case 'cash_out':
-      return `Withdrawal to ${tx.details?.bankDetails?.bankCode || 'bank'}`;
+      return `Withdrawal to ${(tx.details as any)?.bankDetails?.bankCode || 'bank'}`;
     case 'remittance':
       return 'Remittance to';
     default:
@@ -52,11 +52,11 @@ const formatTransactionTarget = (tx: Transaction, currentUid: string) => {
     switch (tx.type) {
      case 'p2p_transfer':
        if (isSender) {
-           return tx.details?.receiverName ? tx.details.receiverName : `User ${tx.receiverInfo?.uid?.substring(0, 5)}...`
+           return (tx.details as any)?.receiverName ? (tx.details as any).receiverName : `User ${tx.receiverInfo?.uid?.substring(0, 5)}...`
        }
-       return tx.details?.senderName ? tx.details.senderName : `User ${tx.senderInfo?.uid?.substring(0, 5)}...`
+               return (tx.details as any)?.senderName ? (tx.details as any).senderName : `User ${tx.senderInfo?.uid?.substring(0, 5)}...`
      default:
-       return tx.details?.recipientName || tx.details?.bankDetails?.accountName || 'External Account';
+               return (tx.details as any)?.recipientName || (tx.details as any)?.bankDetails?.accountName || 'External Account';
    }
 };
 

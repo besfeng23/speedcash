@@ -6,6 +6,8 @@ import { getFunctions, httpsCallable, HttpsCallableResult } from 'firebase/funct
 import { useToast } from '@/hooks/use-toast';
 import { app } from '@/lib/firebase';
 import { useAuth } from './useAuth';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 // Use our CORS proxy to handle Firebase Functions CORS issues
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '/api/cors-proxy';
@@ -83,9 +85,10 @@ async function callDispatcher<TRequest, TResponse>(
 
 // Hook for making API calls with authentication
 export function useApi<TResponse = unknown, TRequest = unknown>(actionName: string) {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const mutation = useMutation({
     mutationFn: async (payload: TRequest): Promise<TResponse> => {
@@ -99,6 +102,21 @@ export function useApi<TResponse = unknown, TRequest = unknown>(actionName: stri
     },
     onError: (error: Error) => {
       console.error(`[useApi] Error in ${actionName}:`, error);
+      
+      // Handle authentication errors
+      if (error.message.includes('Authentication') || error.message.includes('log in')) {
+        toast({
+          title: "Session Expired",
+          description: "Please log in again to continue.",
+          variant: "destructive",
+        });
+        
+        // Clear user session and redirect to login
+        logout();
+        router.push('/login');
+        return;
+      }
+      
       toast({
         title: "Error",
         description: error.message,
@@ -129,8 +147,9 @@ export function useApiQuery<TResponse = unknown>(
   payload?: unknown,
   options?: UseQueryOptions<TResponse, Error, TResponse, QueryKey>
 ) {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { toast } = useToast();
+  const router = useRouter();
 
   const query = useQuery({
     queryKey: ['api', action, payload],
@@ -154,14 +173,30 @@ export function useApiQuery<TResponse = unknown>(
     ...options,
   });
 
-  // Error handling (React Query v5+)
-  if (query.error) {
-    toast({
-      title: 'Error',
-      description: query.error.message,
-      variant: 'destructive',
-    });
-  }
+  // Fix: Move error handling to useEffect to prevent infinite loops
+  useEffect(() => {
+    if (query.error) {
+      // Handle authentication errors
+      if (query.error.message.includes('Authentication') || query.error.message.includes('log in')) {
+        toast({
+          title: "Session Expired",
+          description: "Please log in again to continue.",
+          variant: "destructive",
+        });
+        
+        // Clear user session and redirect to login
+        logout();
+        router.push('/login');
+        return;
+      }
+      
+      toast({
+        title: 'Error',
+        description: query.error.message,
+        variant: 'destructive',
+      });
+    }
+  }, [query.error, toast, logout, router]);
 
   return query;
 }

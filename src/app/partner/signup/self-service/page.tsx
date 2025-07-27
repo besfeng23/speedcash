@@ -125,7 +125,7 @@ export default function SelfServicePartnerSignup() {
         expectedVolume: formData.expectedVolume
       });
 
-      if (result.success) {
+      if ((result as { success: boolean }).success) {
         toast({
           title: "Registration Successful!",
           description: "Your partner account has been created. Please check your email for next steps.",

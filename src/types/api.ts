@@ -82,6 +82,9 @@ export interface AdminStats {
   totalVolume: number;
   activePartners: number;
   pendingKyc: number;
+  pendingWithdrawals: number;
+  newUsers24h: number;
+  totalTxnVolume24h: number;
 }
 
 export interface ActivityLog {

@@ -55,7 +55,7 @@ export default function AnalyticsDashboard() {
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const getAnalyticsMutation = useApi('partnerGetAnalytics');
+  const getAnalyticsMutation = useApi<{ success: boolean; data: AnalyticsData }, { timeRange: string }>('partnerGetAnalytics');
 
   useEffect(() => {
     loadAnalytics();

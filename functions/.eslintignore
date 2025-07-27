@@ -1,0 +1,10 @@
+lib/
+node_modules/
+src/integrations/venv/
+src/integrations/test_emango_endpoints.js
+src/integrations/emango_pay_client.py
+src/integrations/emango_pay_service.py
+src/integrations/requirements.txt
+src/integrations/Dockerfile
+src/integrations/setup_emango_env.bat
+src/integrations/run_all.bat 

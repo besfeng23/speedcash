@@ -6,10 +6,10 @@ const WEBHOOK_CONFIG = {
   secretKey: 'uck6lo8sdjaarqf3sohdoovdvvn0kdnk',
   merchantSeq: '300000064613',
   // Test webhook URL (replace with your actual Firebase Functions URL)
-  webhookUrl: 'https://us-central1-applez-dch9v.cloudfunctions.net/speedypayWebhook',
-  healthUrl: 'https://us-central1-applez-dch9v.cloudfunctions.net/speedypayWebhookHealth',
-  statsUrl: 'https://us-central1-applez-dch9v.cloudfunctions.net/speedypayWebhookStats',
-  testUrl: 'https://us-central1-applez-dch9v.cloudfunctions.net/speedypayWebhookTest'
+  webhookUrl: 'https://asia-southeast1-applez-dch9v.cloudfunctions.net/speedypayWebhook',
+  healthUrl: 'https://asia-southeast1-applez-dch9v.cloudfunctions.net/speedypayWebhookHealth',
+  statsUrl: 'https://asia-southeast1-applez-dch9v.cloudfunctions.net/speedypayWebhookStats',
+  testUrl: 'https://asia-southeast1-applez-dch9v.cloudfunctions.net/speedypayWebhookTest'
 };
 
 // 🔢 SpeedyPay Signature Generation

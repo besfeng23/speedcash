@@ -35,7 +35,7 @@ interface WebhookEvent {
   responseCode?: number;
   responseBody?: string;
   retryCount: number;
-  data: any;
+  data: unknown;
 }
 
 interface WebhookConfig {
@@ -103,7 +103,7 @@ export default function WebhookDashboard() {
     ]);
   }, []);
 
-  const updateWebhookConfig = (field: keyof WebhookConfig, value: any) => {
+  const updateWebhookConfig = (field: keyof WebhookConfig, value: unknown) => {
     setWebhookConfig(prev => ({ ...prev, [field]: value }));
   };
 

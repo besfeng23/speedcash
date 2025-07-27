@@ -63,12 +63,12 @@ export default function PartnerSignupPage() {
       // 4. Redirect to the partner portal after successful signup
       router.push('/partner');
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Partner signup failed:", error);
       toast({
         variant: "destructive",
         title: "Signup Failed",
-        description: error.message,
+        description: (error as Error).message,
       });
     } finally {
       setIsLoading(false);

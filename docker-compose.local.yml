@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  cpay-local:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_ENVIRONMENT=development
+      - PORT=3000
+    env_file:
+      - .env.local
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    restart: unless-stopped
+    networks:
+      - cpay-local-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    command: npm run dev
+
+  # Optional: Add a local database if needed
+  # postgres:
+  #   image: postgres:15-alpine
+  #   environment:
+  #     POSTGRES_DB: cpay_local
+  #     POSTGRES_USER: cpay_user
+  #     POSTGRES_PASSWORD: cpay_password
+  #   ports:
+  #     - "5432:5432"
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   networks:
+  #     - cpay-local-network
+
+  # Optional: Add Redis for caching
+  # redis:
+  #   image: redis:7-alpine
+  #   ports:
+  #     - "6379:6379"
+  #   networks:
+  #     - cpay-local-network
+
+networks:
+  cpay-local-network:
+    driver: bridge
+
+volumes:
+  # postgres_data: 

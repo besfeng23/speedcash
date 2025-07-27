@@ -1,32 +1,29 @@
 
-import { z } from 'zod';
+import { onRequest, Request } from 'firebase-functions/v2/https';
+import { HttpsError } from 'firebase-functions/v2/https';
+import * as admin from 'firebase-admin';
 import * as adminHandlers from './admin/handlers';
 import * as kycHandlers from './kyc/handlers';
 import * as transactionHandlers from './transactions/handlers';
-import * as walletQueryHandlers from './wallet/queries';
 import * as transactionQueryHandlers from './transactions/queries';
+import * as walletQueryHandlers from './wallet/queries';
 import * as kaiHandlers from './kai/handlers';
 import * as partnerHandlers from './partners/handlers';
 import * as integrationHandlers from './integrations/handlers';
-import { onRequest } from 'firebase-functions/v2/https';
+// import * as monitoring from './utils/monitoring';
 
-const dispatcherSchema = z.object({
-  action: z.string(),
-  payload: z.any(),
-});
+// Initialize Firebase Admin if not already initialized
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
 
-// CORS configuration
-const allowedOrigins = [
-  'https://cpay5--applez-dch9v.asia-east1.hosted.app',
-  'https://cpay-admin--applez-dch9v.asia-east1.hosted.app',
-  'http://localhost:3000', // For local development
-  'http://localhost:3001'  // For local development
-];
+// Extend the Request type to include auth property
+interface AuthenticatedRequest extends Request {
+  auth?: admin.auth.DecodedIdToken;
+}
 
 const setCorsHeaders = (res: any, origin: string | undefined) => {
-  const allowedOrigin = origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
-  
-  res.set('Access-Control-Allow-Origin', allowedOrigin);
+  res.set('Access-Control-Allow-Origin', origin || '*');
   res.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
   res.set('Access-Control-Allow-Credentials', 'true');
@@ -40,7 +37,7 @@ export const cpayDispatcher = onRequest({
   memory: '256MiB',
   minInstances: 0,
   maxInstances: 10
-}, async (req, res) => {
+}, async (req: AuthenticatedRequest, res) => {
   const startTime = Date.now();
   const origin = req.headers.origin;
   
@@ -58,19 +55,38 @@ export const cpayDispatcher = onRequest({
     return;
   }
 
-  try {
-    // Validate request method
-    if (req.method !== 'POST') {
-      console.log(`[${new Date().toISOString()}] Method not allowed: ${req.method}`);
-      // await monitoring.logApiCall(req, 'INVALID_METHOD', false, `Method ${req.method} not allowed`);
-      res.status(405).json({ error: 'Method not allowed. Only POST requests are accepted.' });
+  // Verify authentication for all requests except OPTIONS
+  if (req.method !== 'OPTIONS') {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      console.log(`[${new Date().toISOString()}] Missing or invalid authorization header`);
+      res.status(401).json({ error: 'Authentication required' });
       return;
     }
 
-    const { action, payload } = dispatcherSchema.parse(req.body);
+    try {
+      const idToken = authHeader.split('Bearer ')[1];
+      const decodedToken = await admin.auth().verifyIdToken(idToken);
+      req.auth = decodedToken;
+    } catch (error) {
+      console.log(`[${new Date().toISOString()}] Invalid token:`, error);
+      res.status(401).json({ error: 'Invalid authentication token' });
+      return;
+    }
+  }
+
+  try {
+    const { action, data: payload } = req.body;
+    
+    if (!action) {
+      console.log(`[${new Date().toISOString()}] Missing action in request body`);
+      res.status(400).json({ error: 'Action is required' });
+      return;
+    }
+
     console.log(`[${new Date().toISOString()}] Processing action: ${action}`);
     
-    let result;
+    let result: any;
     
     switch (action) {
       case 'adminApproveWithdrawal': result = await adminHandlers.adminApproveWithdrawalHandler(payload, req); break;
@@ -161,7 +177,13 @@ export const cpayDispatcher = onRequest({
     //   duration
     // });
     
-    if (error.name === 'ZodError') {
+    // Handle different types of errors with appropriate status codes
+    if (error instanceof HttpsError) {
+      // Convert Firebase Functions HttpsError to appropriate HTTP status
+      const statusCode = getHttpStatusFromHttpsError(error);
+      console.log(`[${new Date().toISOString()}] HttpsError converted to HTTP ${statusCode}:`, error.message);
+      res.status(statusCode).json({ error: error.message });
+    } else if (error.name === 'ZodError') {
       console.log(`[${new Date().toISOString()}] Validation error:`, error.errors);
       // await monitoring.logApiCall(req, req.body?.action || 'unknown', false, 'Validation error');
       res.status(400).json({ error: 'Invalid request format', details: error.errors });
@@ -171,3 +193,45 @@ export const cpayDispatcher = onRequest({
     }
   }
 });
+
+// Helper function to convert Firebase Functions HttpsError to HTTP status codes
+function getHttpStatusFromHttpsError(error: HttpsError): number {
+  switch (error.code) {
+    case 'ok':
+      return 200;
+    case 'cancelled':
+      return 499; // Client closed request
+    case 'unknown':
+      return 500;
+    case 'invalid-argument':
+      return 400;
+    case 'deadline-exceeded':
+      return 504;
+    case 'not-found':
+      return 404;
+    case 'already-exists':
+      return 409;
+    case 'permission-denied':
+      return 403;
+    case 'resource-exhausted':
+      return 429;
+    case 'failed-precondition':
+      return 400;
+    case 'aborted':
+      return 409;
+    case 'out-of-range':
+      return 400;
+    case 'unimplemented':
+      return 501;
+    case 'internal':
+      return 500;
+    case 'unavailable':
+      return 503;
+    case 'data-loss':
+      return 500;
+    case 'unauthenticated':
+      return 401;
+    default:
+      return 500;
+  }
+}

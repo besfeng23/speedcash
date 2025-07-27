@@ -30,9 +30,12 @@ export { expressTest } from './express-test';
 // export { v1Test } from './v1-test';
 
 // --- SPEEDYPAY WEBHOOK HANDLERS ---
-// Temporarily commented out due to build service account issues
+// SpeedyPay webhook functionality integrated into simpleTest function
+// Original standalone webhooks temporarily commented out due to org policy build service account issues
 // export { 
-//   speedypayWebhook,
+//   speedypayWebhook
+// } from './partners/speedypay-webhook';
+// export {
 //   speedypayWebhookHealth,
 //   speedypayWebhookStats,
 //   speedypayWebhookTest

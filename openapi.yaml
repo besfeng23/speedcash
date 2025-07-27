@@ -1,0 +1,474 @@
+swagger: "2.0"
+info:
+  title: "CPay Partner API"
+  description: |
+    Professional API for CPay partners to process transactions, manage accounts, and integrate with the CPay ecosystem.
+    
+    This API provides secure, scalable endpoints for:
+    - Transaction processing and status checking
+    - Account management and KYC operations  
+    - Webhook notifications and callbacks
+    - Partner configuration and settings
+    
+    **Authentication:** All endpoints require API key authentication.
+    **Rate Limits:** 1000 requests per hour per API key.
+    **Support:** partners@cpay.com
+  version: "1.0.0"
+  termsOfService: "https://cpay.com/terms"
+  contact:
+    name: "CPay Partner Support"
+    email: "partners@cpay.com"
+    url: "https://cpay.com/support"
+  license:
+    name: "CPay API License"
+    url: "https://cpay.com/license"
+
+host: "asia-southeast1-applez-dch9v.cloudfunctions.net"
+basePath: "/v1"
+schemes:
+  - "https"
+consumes:
+  - "application/json"
+produces:
+  - "application/json"
+
+# Security definitions
+securityDefinitions:
+  ApiKeyAuth:
+    type: "apiKey"
+    in: "header"
+    name: "X-API-Key"
+    description: "Partner API key for authentication"
+
+security:
+  - ApiKeyAuth: []
+
+# Global parameters
+parameters:
+  ApiKeyHeader:
+    name: "X-API-Key"
+    in: "header"
+    type: "string"
+    required: true
+    description: "Partner API key"
+  
+  RequestIdHeader:
+    name: "X-Request-ID"
+    in: "header"
+    type: "string"
+    required: false
+    description: "Unique request identifier for tracking"
+
+# API endpoints
+paths:
+  /health:
+    get:
+      summary: "Health Check"
+      description: "Check API service health and status"
+      operationId: "healthCheck"
+      x-google-backend:
+        address: https://asia-southeast1-applez-dch9v.cloudfunctions.net/cpayDispatcher
+        path_translation: APPEND_PATH_TO_ADDRESS
+      security: []  # No authentication required for health check
+      responses:
+        "200":
+          description: "Service is healthy"
+          schema:
+            type: "object"
+            properties:
+              status:
+                type: "string"
+                example: "healthy"
+              timestamp:
+                type: "string"
+                format: "date-time"
+              version:
+                type: "string"
+                example: "1.0.0"
+        "503":
+          description: "Service unavailable"
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /transactions:
+    post:
+      summary: "Process Transaction"
+      description: "Create and process a new financial transaction"
+      operationId: "processTransaction"
+      x-google-backend:
+        address: https://asia-southeast1-applez-dch9v.cloudfunctions.net/cpayDispatcher
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - $ref: "#/parameters/ApiKeyHeader"
+        - $ref: "#/parameters/RequestIdHeader"
+        - name: "transaction"
+          in: "body"
+          required: true
+          description: "Transaction details"
+          schema:
+            $ref: "#/definitions/TransactionRequest"
+      responses:
+        "200":
+          description: "Transaction processed successfully"
+          schema:
+            $ref: "#/definitions/TransactionResponse"
+        "400":
+          description: "Invalid transaction data"
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        "401":
+          description: "Unauthorized - Invalid API key"
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        "429":
+          description: "Rate limit exceeded"
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        "500":
+          description: "Internal server error"
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /transactions/{transactionId}:
+    get:
+      summary: "Get Transaction Status"
+      description: "Retrieve the current status and details of a transaction"
+      operationId: "getTransactionStatus"
+      x-google-backend:
+        address: https://asia-southeast1-applez-dch9v.cloudfunctions.net/cpayDispatcher
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - $ref: "#/parameters/ApiKeyHeader"
+        - name: "transactionId"
+          in: "path"
+          type: "string"
+          required: true
+          description: "Unique transaction identifier"
+      responses:
+        "200":
+          description: "Transaction details retrieved"
+          schema:
+            $ref: "#/definitions/TransactionStatusResponse"
+        "404":
+          description: "Transaction not found"
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /accounts/{accountId}/balance:
+    get:
+      summary: "Get Account Balance"
+      description: "Retrieve current balance for a partner account"
+      operationId: "getAccountBalance"
+      x-google-backend:
+        address: https://asia-southeast1-applez-dch9v.cloudfunctions.net/cpayDispatcher
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - $ref: "#/parameters/ApiKeyHeader"
+        - name: "accountId"
+          in: "path"
+          type: "string"
+          required: true
+          description: "Partner account identifier"
+      responses:
+        "200":
+          description: "Account balance retrieved"
+          schema:
+            $ref: "#/definitions/BalanceResponse"
+
+  /kyc/verify:
+    post:
+      summary: "Verify KYC Documents"
+      description: "Submit KYC documents for verification"
+      operationId: "verifyKyc"
+      x-google-backend:
+        address: https://asia-southeast1-applez-dch9v.cloudfunctions.net/cpayDispatcher
+        path_translation: APPEND_PATH_TO_ADDRESS
+      parameters:
+        - $ref: "#/parameters/ApiKeyHeader"
+        - name: "kycData"
+          in: "body"
+          required: true
+          schema:
+            $ref: "#/definitions/KycRequest"
+      responses:
+        "200":
+          description: "KYC verification initiated"
+          schema:
+            $ref: "#/definitions/KycResponse"
+
+# Data models
+definitions:
+  TransactionRequest:
+    type: "object"
+    required:
+      - "amount"
+      - "currency"
+      - "type"
+      - "senderInfo"
+      - "receiverInfo"
+    properties:
+      amount:
+        type: "number"
+        format: "double"
+        minimum: 0.01
+        description: "Transaction amount"
+        example: 100.50
+      currency:
+        type: "string"
+        enum: ["PHP", "USD", "KRW"]
+        description: "Currency code"
+        example: "PHP"
+      type:
+        type: "string"
+        enum: ["TRANSFER", "PAYMENT", "WITHDRAWAL", "DEPOSIT"]
+        description: "Transaction type"
+        example: "TRANSFER"
+      senderInfo:
+        $ref: "#/definitions/AccountInfo"
+      receiverInfo:
+        $ref: "#/definitions/AccountInfo"
+      description:
+        type: "string"
+        maxLength: 500
+        description: "Transaction description"
+        example: "Payment for services"
+      reference:
+        type: "string"
+        maxLength: 100
+        description: "Partner reference number"
+        example: "REF-001234"
+
+  AccountInfo:
+    type: "object"
+    required:
+      - "accountId"
+      - "accountType"
+    properties:
+      accountId:
+        type: "string"
+        description: "Account identifier"
+        example: "user_123456"
+      accountType:
+        type: "string"
+        enum: ["USER", "MERCHANT", "PARTNER"]
+        description: "Account type"
+        example: "USER"
+      name:
+        type: "string"
+        description: "Account holder name"
+        example: "John Doe"
+      email:
+        type: "string"
+        format: "email"
+        description: "Account email"
+        example: "john@example.com"
+
+  TransactionResponse:
+    type: "object"
+    properties:
+      transactionId:
+        type: "string"
+        description: "Unique transaction identifier"
+        example: "tx_987654321"
+      status:
+        type: "string"
+        enum: ["PENDING", "PROCESSING", "COMPLETED", "FAILED", "CANCELLED"]
+        description: "Transaction status"
+        example: "PENDING"
+      amount:
+        type: "number"
+        format: "double"
+        description: "Transaction amount"
+        example: 100.50
+      currency:
+        type: "string"
+        description: "Currency code"
+        example: "PHP"
+      createdAt:
+        type: "string"
+        format: "date-time"
+        description: "Transaction creation timestamp"
+      estimatedCompletion:
+        type: "string"
+        format: "date-time"
+        description: "Estimated completion time"
+      fees:
+        type: "object"
+        properties:
+          amount:
+            type: "number"
+            format: "double"
+          currency:
+            type: "string"
+
+  TransactionStatusResponse:
+    type: "object"
+    properties:
+      transactionId:
+        type: "string"
+        example: "tx_987654321"
+      status:
+        type: "string"
+        enum: ["PENDING", "PROCESSING", "COMPLETED", "FAILED", "CANCELLED"]
+        example: "COMPLETED"
+      amount:
+        type: "number"
+        format: "double"
+        example: 100.50
+      currency:
+        type: "string"
+        example: "PHP"
+      createdAt:
+        type: "string"
+        format: "date-time"
+      completedAt:
+        type: "string"
+        format: "date-time"
+      failureReason:
+        type: "string"
+        description: "Reason for failure (if status is FAILED)"
+      receipts:
+        type: "array"
+        items:
+          type: "object"
+          properties:
+            type:
+              type: "string"
+            url:
+              type: "string"
+
+  BalanceResponse:
+    type: "object"
+    properties:
+      accountId:
+        type: "string"
+        example: "partner_123"
+      balances:
+        type: "array"
+        items:
+          type: "object"
+          properties:
+            currency:
+              type: "string"
+              example: "PHP"
+            available:
+              type: "number"
+              format: "double"
+              example: 5000.00
+            pending:
+              type: "number"
+              format: "double"
+              example: 100.00
+            reserved:
+              type: "number"
+              format: "double"
+              example: 50.00
+      lastUpdated:
+        type: "string"
+        format: "date-time"
+
+  KycRequest:
+    type: "object"
+    required:
+      - "userId"
+      - "documents"
+    properties:
+      userId:
+        type: "string"
+        description: "User identifier"
+        example: "user_123456"
+      documents:
+        type: "array"
+        items:
+          type: "object"
+          properties:
+            type:
+              type: "string"
+              enum: ["ID_CARD", "PASSPORT", "DRIVERS_LICENSE", "PROOF_OF_ADDRESS"]
+            url:
+              type: "string"
+              description: "Document image URL"
+            metadata:
+              type: "object"
+
+  KycResponse:
+    type: "object"
+    properties:
+      verificationId:
+        type: "string"
+        example: "kyc_789123"
+      status:
+        type: "string"
+        enum: ["SUBMITTED", "UNDER_REVIEW", "APPROVED", "REJECTED"]
+        example: "SUBMITTED"
+      estimatedReviewTime:
+        type: "string"
+        description: "Estimated review completion time"
+        example: "24-48 hours"
+
+  ErrorResponse:
+    type: "object"
+    required:
+      - "error"
+      - "message"
+    properties:
+      error:
+        type: "string"
+        description: "Error code"
+        example: "INVALID_REQUEST"
+      message:
+        type: "string"
+        description: "Human-readable error message"
+        example: "The request is missing required parameters"
+      details:
+        type: "object"
+        description: "Additional error details"
+      requestId:
+        type: "string"
+        description: "Request identifier for tracking"
+        example: "req_abc123"
+      timestamp:
+        type: "string"
+        format: "date-time"
+        description: "Error timestamp"
+
+# Response examples and additional documentation
+responses:
+  UnauthorizedError:
+    description: "Authentication information is missing or invalid"
+    schema:
+      $ref: "#/definitions/ErrorResponse"
+    examples:
+      application/json:
+        error: "UNAUTHORIZED"
+        message: "Invalid or missing API key"
+        requestId: "req_123456"
+        timestamp: "2024-01-15T10:30:00Z"
+
+  RateLimitError:
+    description: "Too many requests - rate limit exceeded"
+    schema:
+      $ref: "#/definitions/ErrorResponse"
+    examples:
+      application/json:
+        error: "RATE_LIMIT_EXCEEDED"
+        message: "Rate limit of 1000 requests per hour exceeded"
+        details:
+          limit: 1000
+          window: "1h"
+          reset_time: "2024-01-15T11:00:00Z"
+
+# Additional metadata
+externalDocs:
+  description: "Find out more about CPay APIs"
+  url: "https://docs.cpay.com"
+
+tags:
+  - name: "transactions"
+    description: "Transaction processing operations"
+  - name: "accounts"
+    description: "Account management operations"
+  - name: "kyc"
+    description: "Know Your Customer verification"
+  - name: "system"
+    description: "System health and status" 

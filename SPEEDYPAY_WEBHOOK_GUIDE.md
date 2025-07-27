@@ -184,7 +184,7 @@ SPEEDYPAY_MERCHANT_SEQ=300000064613
 
 # Firebase Configuration (auto-detected)
 FIREBASE_PROJECT_ID=applez-dch9v
-FIREBASE_REGION=us-central1
+FIREBASE_REGION=asia-southeast1
 ```
 
 ### **Firebase Functions Configuration**
@@ -193,7 +193,7 @@ FIREBASE_REGION=us-central1
   "functions": {
     "source": "functions",
     "runtime": "nodejs18",
-    "region": "us-central1"
+    "region": "asia-southeast1"
   }
 }
 ```
@@ -219,10 +219,10 @@ await testFailedWebhook();
 ### **3. Manual Testing with cURL**
 ```bash
 # Health check
-curl -X GET "https://us-central1-applez-dch9v.cloudfunctions.net/speedypayWebhookHealth"
+curl -X GET "https://asia-southeast1-applez-dch9v.cloudfunctions.net/speedypayWebhookHealth"
 
 # Send test webhook
-curl -X POST "https://us-central1-applez-dch9v.cloudfunctions.net/speedypayWebhook" \
+curl -X POST "https://asia-southeast1-applez-dch9v.cloudfunctions.net/speedypayWebhook" \
   -H "Content-Type: application/json" \
   -d '{
     "signType": "SHA256",
@@ -301,9 +301,16 @@ firebase functions:config:set speedypay.merchant_seq="300000064613"
 ```
 
 ### **3. Configure Webhook URL**
-Update your SpeedyPay dashboard with the webhook URL:
+**IMPORTANT UPDATE**: Due to Google Cloud organization policies preventing new function creation, SpeedyPay webhook functionality has been integrated into the existing `simpleTest` function.
+
+Update your SpeedyPay dashboard with the current webhook URL:
 ```
-https://us-central1-applez-dch9v.cloudfunctions.net/speedypayWebhook
+https://simpletest-n4f73lnkeq-as.a.run.app
+```
+
+**Legacy URL (temporarily unavailable):**
+```
+https://asia-southeast1-applez-dch9v.cloudfunctions.net/speedypayWebhook
 ```
 
 ## 🔍 **Troubleshooting**
@@ -351,7 +358,7 @@ https://us-central1-applez-dch9v.cloudfunctions.net/speedypayWebhook
 firebase functions:log --only speedypayWebhook
 
 # Test webhook health
-curl -X GET "https://us-central1-applez-dch9v.cloudfunctions.net/speedypayWebhookHealth"
+curl -X GET "https://asia-southeast1-applez-dch9v.cloudfunctions.net/speedypayWebhookHealth"
 
 # Monitor real-time logs
 firebase functions:log --follow

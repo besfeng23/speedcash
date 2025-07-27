@@ -48,7 +48,7 @@ if [ $? -eq 0 ]; then
     echo "  - speedypayWebhookTest (Test data generator)"
     echo ""
     echo "🌐 Webhook URL:"
-    echo "  https://us-central1-applez-dch9v.cloudfunctions.net/speedypayWebhook"
+    echo "  https://asia-southeast1-applez-dch9v.cloudfunctions.net/speedypayWebhook"
     echo ""
     echo "🧪 Test the webhook:"
     echo "  node test-speedypay-webhook.js"
@@ -57,7 +57,7 @@ if [ $? -eq 0 ]; then
     echo "  firebase functions:log --only speedypayWebhook"
     echo ""
     echo "🔍 Health check:"
-    echo "  curl -X GET https://us-central1-applez-dch9v.cloudfunctions.net/speedypayWebhookHealth"
+    echo "  curl -X GET https://asia-southeast1-applez-dch9v.cloudfunctions.net/speedypayWebhookHealth"
 else
     echo "❌ Webhook deployment failed!"
     echo "Check the error messages above and try again."

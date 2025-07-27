@@ -20,9 +20,14 @@ export async function POST(request: NextRequest) {
 
     const result = await response.json();
 
-    // Return the response with proper CORS headers
+    // Preserve the original status code from the Firebase Function
+    const statusCode = response.status;
+    
+    console.log(`[CORS Proxy] Action: ${action}, Status: ${statusCode}, Result:`, result);
+
+    // Return the response with proper CORS headers and original status code
     return NextResponse.json(result, {
-      status: response.status,
+      status: statusCode,
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',

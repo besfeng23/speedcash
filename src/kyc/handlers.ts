@@ -13,7 +13,7 @@ const functionOptions = {
 };
 
 // Basic audit logging utility
-const auditLog = async (action: string, userId: string, details: any) => {
+const auditLog = async (action: string, userId: string, details: unknown) => {
   try {
     await db.collection('audit_logs').add({
       action,

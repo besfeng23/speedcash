@@ -6,6 +6,7 @@ import { useState, useEffect, ReactNode } from 'react';
 import { onIdTokenChanged, signOut, User } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from "@/components/ui/toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { ChatAssistantWidget } from '@/components/ai/chat-assistant-widget';
 import { cn } from '@/lib/utils';
 
@@ -13,11 +14,13 @@ export function ClientRoot({ children }: { children: ReactNode }) {
   return (
     <QueryProvider>
       <AuthProvider>
-        <div className={cn('font-body antialiased', 'min-h-screen bg-background font-sans', 'relative flex min-h-screen flex-col')}>
-          <main className="flex-1">{children}</main>
-        </div>
-        <Toaster />
-        <ChatAssistantWidget />
+        <TooltipProvider>
+          <div className={cn('font-body antialiased', 'min-h-screen bg-background font-sans', 'relative flex min-h-screen flex-col')}>
+            <main className="flex-1">{children}</main>
+          </div>
+          <Toaster />
+          <ChatAssistantWidget />
+        </TooltipProvider>
       </AuthProvider>
     </QueryProvider>
   );

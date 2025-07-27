@@ -1,4 +1,4 @@
-import * as functions from 'firebase-functions';
+import { onRequest } from 'firebase-functions/v2/https';
 import * as crypto from 'crypto';
 import * as admin from 'firebase-admin';
 import { Logger } from '../utils/logger';
@@ -226,10 +226,10 @@ async function sendAdminAlert(transaction: any) {
 }
 
 // 🌐 SpeedyPay Webhook Handler
-export const speedypayWebhook = functions.https.onRequest({ 
+export const speedypayWebhook = onRequest({
   region: 'asia-southeast1',
-  cors: true 
-}, async (req, res) => {
+  cors: true
+}, async (req: any, res: any) => {
   // Set CORS headers
   res.set('Access-Control-Allow-Origin', '*');
   res.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -333,10 +333,10 @@ export const speedypayWebhook = functions.https.onRequest({
 });
 
 // 🔍 Webhook Health Check
-export const speedypayWebhookHealth = functions.https.onRequest({ 
+export const speedypayWebhookHealth = onRequest({
   region: 'asia-southeast1',
-  cors: true 
-}, async (req, res) => {
+  cors: true
+}, async (req: any, res: any) => {
   // Set CORS headers
   res.set('Access-Control-Allow-Origin', '*');
   res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -372,10 +372,10 @@ export const speedypayWebhookHealth = functions.https.onRequest({
 });
 
 // 📊 Webhook Statistics
-export const speedypayWebhookStats = functions.https.onRequest({ 
+export const speedypayWebhookStats = onRequest({
   region: 'asia-southeast1',
-  cors: true 
-}, async (req, res) => {
+  cors: true
+}, async (req: any, res: any) => {
   // Set CORS headers
   res.set('Access-Control-Allow-Origin', '*');
   res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
@@ -445,10 +445,10 @@ export const speedypayWebhookStats = functions.https.onRequest({
 });
 
 // 🔧 Webhook Test Endpoint
-export const speedypayWebhookTest = functions.https.onRequest({ 
+export const speedypayWebhookTest = onRequest({
   region: 'asia-southeast1',
-  cors: true 
-}, async (req, res) => {
+  cors: true
+}, async (req: any, res: any) => {
   // Set CORS headers
   res.set('Access-Control-Allow-Origin', '*');
   res.set('Access-Control-Allow-Methods', 'GET, OPTIONS');
