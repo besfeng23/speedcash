@@ -1,19 +1,46 @@
+import * as admin from 'firebase-admin';
+import * as functions from 'firebase-functions/v1';
 
+const db = admin.firestore();
 
-// import { onUserCreated } from 'firebase-functions/v2/identity'; // TODO: Fix auth trigger import
+export const onUserCreate = functions
+  .region('asia-southeast1')
+  .auth.user()
+  .onCreate(async (user) => {
+    const now = admin.firestore.FieldValue.serverTimestamp();
+    const existingClaims = (user.customClaims || {}) as Record<string, unknown>;
+    const role = typeof existingClaims.role === 'string' ? existingClaims.role : 'user';
 
+    await admin.auth().setCustomUserClaims(user.uid, {
+      ...existingClaims,
+      role,
+    });
 
+    const batch = db.batch();
 
+    batch.set(db.doc(`users/${user.uid}`), {
+      uid: user.uid,
+      email: user.email || null,
+      displayName: user.displayName || null,
+      mobileNumber: user.phoneNumber || null,
+      role,
+      kycStatus: 'BASIC',
+      walletStatus: 'ACTIVE',
+      createdAt: now,
+      updatedAt: now,
+    }, { merge: true });
 
-// TODO: Implement auth trigger when Firebase Functions v2 identity is properly supported
-// export const onUserCreate = onUserCreated(
-//   {
-//     region: 'asia-southeast1',
-//   },
-//   async (event: any) => {
-//     const user = event.data;
-//     if (!user) return;
-//     // ... implementation
-//   }
-// );
+    for (const currency of ['PHP', 'KRW']) {
+      batch.set(db.doc(`users/${user.uid}/wallets/${currency}`), {
+        currency,
+        balance: 0,
+        availableBalance: 0,
+        holdBalance: 0,
+        status: 'ACTIVE',
+        createdAt: now,
+        updatedAt: now,
+      }, { merge: true });
+    }
 
+    await batch.commit();
+  });
