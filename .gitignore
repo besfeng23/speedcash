@@ -34,10 +34,17 @@ next-env.d.ts
 firebase-debug.log
 firebase-debug.*.log
 
-# environment variables
+# environment variables and local secrets
+.env
+.env.*
+!.env.example
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+apphosting.local.yaml
 
-
-#functions
+# functions
 /functions/lib
 
 # package manager lock files
