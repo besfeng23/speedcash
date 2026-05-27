@@ -1,178 +1,100 @@
-# 🚀 CPay - Comprehensive Fintech Platform
+# Speedcash - Controlled Fintech Platform Prototype
 
-**A modern, enterprise-grade financial technology platform supporting digital wallets, international remittances, and partner integrations.**
+Speedcash is a pre-production fintech application for wallets, user onboarding, partner operations, admin review workflows, and staged payment integrations.
 
-## 🎯 Platform Overview
+This repository is **not production-ready for real money movement yet**. Treat it as a strong prototype / staging hardening codebase until the safety gates below are complete.
 
-CPay is a comprehensive fintech ecosystem featuring:
-- **🏦 Digital Wallet** - Multi-currency support (PHP, KRW)
-- **💸 P2P Transfers** - Instant peer-to-peer transactions
-- **🌏 International Remittance** - Philippines to Korea transfers
-- **📱 Mobile Payments** - QR code payments and bill payments
-- **🏢 Partner Portal** - Self-service onboarding and management
-- **⚙️ Admin Dashboard** - Complete platform management
-- **🤖 AI Assistant** - Intelligent user support (Gemini AI)
+## Current Status
 
-## 🚀 Quick Start
+| Area | Status | Notes |
+| --- | --- | --- |
+| Authentication | Functional demo | Firebase Auth is wired. New-user provisioning is implemented through an auth trigger. |
+| User wallets | Staging hardening | Client-side wallet writes are blocked by Firestore rules. Backend transaction correctness still needs full ledger/reconciliation proof. |
+| P2P transfers | Prototype | Existing backend flow works structurally but still needs ledger-backed invariant tests. |
+| Cash-in | Unsafe until provider-confirmed | Do not credit wallets from user-submitted reference data. Provider callback/polling confirmation is required before production. |
+| Cash-out | Unsafe until provider-confirmed | Do not mark payouts completed from admin approval alone. Gateway submission, status polling/callbacks, and failure/reversal handling are required. |
+| Remittance | Sandbox only | Fixed-rate/remittance assumptions must be replaced by quote IDs, expiry, spread/fee capture, and compliance checks. |
+| Admin dashboard | Functional demo | Good structure, but stats/contracts and permission tests must be hardened. |
+| Partner portal | Functional demo | Partner route now requires partner/admin/superadmin role. Backend ownership checks must remain the source of truth. |
+| AI assistant | Optional demo | Must not be used for compliance decisions or transaction authorization. |
+| External integrations | Disabled for production | Enable only after provider sandbox tests, callback verification, idempotency, and reconciliation pass. |
 
-### Prerequisites
-- Node.js 18+ and npm
-- Firebase CLI (`npm install -g firebase-tools`)
-- Python 3.8+ (for payment microservices)
+## Non-Negotiable Production Safety Gates
 
-### 1. Clone and Setup
+Speedcash must not be treated as live fintech until all of these are done:
+
+1. Rotate every secret that was ever committed.
+2. Rewrite Git history or assume exposed credentials are permanently compromised.
+3. Store real secrets in Google Secret Manager, not committed config files.
+4. Deploy locked Firestore and Storage rules.
+5. Use an immutable ledger for every balance mutation.
+6. Make cash-in pending until provider confirmation.
+7. Make cash-out pending/submitted/processing until provider confirmation.
+8. Make webhook processing idempotent and state-transition aware.
+9. Add daily reconciliation for balances, ledger entries, failed transactions, and settlement accounts.
+10. Add emulator integration tests for wallet, cash-in, cash-out, KYC, roles, webhooks, and insufficient-balance cases.
+11. Make CI block merges on typecheck, lint, tests, frontend build, and functions build.
+12. Verify staging with sandbox provider credentials before any production credential is connected.
+
+## Development Requirements
+
+- Node.js 20+
+- npm
+- Firebase CLI
+- Firebase project access
+- Secret Manager access for non-local environments
+
+## Local Setup
+
 ```bash
-# Clone the repository
-git clone <your-repository-url>
-cd Cpay
-
-# Install dependencies
 npm install
 cd functions && npm install && cd ..
-```
-
-### 2. Environment Configuration
-```bash
-# Copy example environment file
 cp env.example .env.local
-
-# Edit .env.local with your configuration
-# Key variables to set:
-# - GEMINI_API_KEY (AI assistant)
-# - MAILCHIMP_API_KEY (notifications)
-# - Payment gateway credentials
-```
-
-### 3. Firebase Setup
-```bash
-# Login to Firebase
-firebase login
-
-# Set project
-firebase use applez-dch9v
-
-# Deploy Firestore rules and indexes
-firebase deploy --only firestore
-```
-
-### 4. Development Servers
-```bash
-# Terminal 1: Frontend (Next.js)
 npm run dev
-# Runs on http://localhost:3000
-
-# Terminal 2: Firebase Functions
-cd functions && npm run serve
-# Runs on http://localhost:5001
-
-# Terminal 3: Python Microservices (optional)
-cd functions/src/integrations
-python emango_pay_service.py
-# Runs on http://localhost:5000
 ```
 
-## 🏗️ Project Structure
+`env.example` contains placeholders only. Do not put live keys, webhook secrets, signing secrets, or gateway credentials into committed files.
 
-```
-Cpay/
-├── src/                          # Next.js frontend application
-│   ├── app/                      # App router pages
-│   │   ├── admin/               # Admin dashboard
-│   │   ├── partner/             # Partner portal
-│   │   └── consumer/            # Consumer mobile app
-│   ├── components/              # Reusable UI components
-│   └── lib/                     # Utilities and configurations
-├── functions/                    # Firebase Cloud Functions
-│   └── src/                     
-│       ├── admin/               # Admin operations
-│       ├── ai/                  # AI assistant (Gemini)
-│       ├── integrations/        # Payment gateways & APIs
-│       ├── partners/            # Partner management
-│       ├── transactions/        # Transaction processing
-│       └── utils/               # Shared utilities
-├── docs/                        # Comprehensive documentation
-└── scripts/                     # Setup and utility scripts
-```
+## Common Commands
 
-## 🔧 Core Features Status
-
-| Feature | Status | Description |
-|---------|--------|-------------|
-| ✅ User Authentication | **Live** | Firebase Auth with role-based access |
-| ✅ Digital Wallets | **Live** | Multi-currency (PHP, KRW) support |
-| ✅ P2P Transfers | **Live** | Real-time peer-to-peer transactions |
-| ✅ Admin Dashboard | **Live** | Complete platform management |
-| ✅ Partner Portal | **Live** | Self-service partner onboarding |
-| ✅ AI Assistant | **Live** | Gemini-powered intelligent support |
-| 🔄 International Remittance | **Beta** | Philippines to Korea transfers |
-| 🔄 Payment Integrations | **Beta** | eMango Pay, Channel Aggregator |
-| 📋 Bill Payments | **Planned** | Utility and service payments |
-
-## 🚀 Deployment
-
-### Production Deployment
 ```bash
-# Deploy all services
+npm run typecheck
+npm run lint
+npm test
 npm run build
-firebase deploy
-
-# Deploy specific services
-firebase deploy --only hosting        # Frontend only
-firebase deploy --only functions      # Backend only
-firebase deploy --only firestore      # Database rules only
+npm run build:functions
 ```
 
-### Environment Setup
-```bash
-# Development
-firebase use applez-dch9v
+## Deployment Notes
 
-# Set environment-specific configuration
-firebase functions:config:set \
-  gemini.api_key="your-gemini-key" \
-  mailchimp.api_key="your-mailchimp-key"
+Use Firebase App Hosting or a single clearly chosen production hosting target. Do not mix contradictory static `.next` hosting assumptions with SSR/App Hosting deployment paths.
+
+For production-like environments:
+
+- Use Node 20 everywhere.
+- Set `NEXT_PUBLIC_API_BASE_URL` to the full dispatcher URL or a base Cloud Functions URL that the app can normalize to `/cpayDispatcher`.
+- Set `CORS_ALLOWED_ORIGINS` to explicit trusted origins only.
+- Keep real-money feature flags disabled until provider confirmations and reconciliation are proven.
+
+## Security Notes
+
+- Storage is scoped by owner path for KYC/KYB files.
+- Firestore blocks client writes to wallet, transaction, ledger, cashout, webhook, FX quote, and log records.
+- Users can request actions through authenticated backend functions; they must not mutate money records directly.
+- Logs must not contain full account numbers, mobile numbers, signatures, tokens, or provider payloads.
+
+## Project Structure
+
+```text
+src/                 Next.js frontend
+functions/           Firebase Cloud Functions
+docs/                Architecture and readiness notes
+scripts/             Utility scripts
+firestore.rules      Firestore access rules
+storage.rules        Cloud Storage access rules
+apphosting.yaml      Firebase App Hosting configuration
 ```
 
-## 📊 Monitoring & Analytics
+## Bottom Line
 
-- **Performance**: Firebase Performance Monitoring
-- **Analytics**: Google Analytics 4 integration
-- **Error Tracking**: Built-in Firebase Crashlytics
-- **Logs**: Cloud Functions logs via Firebase Console
-
-## 🔐 Security Features
-
-- **Authentication**: Firebase Auth with custom claims
-- **Authorization**: Role-based access control (Admin, Partner, User)
-- **Data Validation**: Zod schema validation throughout
-- **Secure API**: HTTPS-only endpoints with request validation
-- **Audit Trails**: Complete transaction and admin action logging
-
-## 📚 Documentation
-
-- 📖 [Complete Setup Guide](./COMPLETE_SETUP_GUIDE.md) - Comprehensive installation guide
-- 🔐 [Production Security Guide](./PRODUCTION_SECURITY_GUIDE.md) - Security configuration
-- 🏗️ [Architecture Improvements](./ARCHITECTURE_IMPROVEMENTS_SUMMARY.md) - Technical architecture
-- 🚀 [Enterprise Upgrade Roadmap](./ENTERPRISE_UPGRADE_ROADMAP.md) - Scaling strategies
-- 📈 [Product Strategy Roadmap](./PRODUCT_STRATEGY_ROADMAP.md) - Business development
-- 🔌 [Integration Guide](./docs/integration-guide.md) - API integration documentation
-- 📋 [Project Blueprint](./docs/blueprint.md) - Detailed feature specifications
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📞 Support
-
-- **Documentation**: All guides in `/docs` directory
-- **Issues**: Use GitHub Issues for bug reports
-- **Questions**: Check existing documentation first
-- **Email**: Support contact information in project configuration
-
-## 📄 License
-
-This project is proprietary and confidential. Unauthorized copying, modification, or distribution is prohibited.
+Speedcash has useful bones. It is not production fintech yet. The next correct move is boring discipline: secrets rotated, rules deployed, ledger added, provider-confirmed state machines implemented, reconciliation tested, and CI enforced.
