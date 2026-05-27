@@ -1,190 +1,188 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
-// 🔐 SpeedyPay Configuration
-const SPEEDYPAY_CONFIG = {
-  secretKey: process.env.SPEEDYPAY_SECRET_KEY || 'uck6lo8sdjaarqf3sohdoovdvvn0kdnk',
-  merchantSeq: process.env.SPEEDYPAY_MERCHANT_SEQ || '300000064613',
-  testBaseUrl: 'https://test.e-mango.ph/cashier',
-  prodBaseUrl: 'https://pay.e-mango.ph/cashier'
+type SpeedyPayParams = Record<string, string | number | boolean>;
+
+type SpeedyPayRequestBody = {
+  amount?: unknown;
+  currency?: unknown;
+  procId?: unknown;
+  procDetail?: unknown;
+  purposes?: unknown;
+  firstName?: unknown;
+  lastName?: unknown;
+  mobilePhone?: unknown;
+  internalTransactionId?: unknown;
 };
 
-// 🔢 SpeedyPay Signature Generation
-function generateSpeedyPaySignature(params: any, secretKey: string): string {
-  // 1. Filter out null values and the sign field
-  const filteredParams: { [key: string]: any } = {};
+type SpeedyPayResponse = {
+  respCode?: unknown;
+  respMessage?: unknown;
+  orderSeq?: unknown;
+  transSeq?: unknown;
+  transState?: unknown;
+};
+
+function requireEnv(name: string): string {
+  const value = process.env[name]?.trim();
+  if (!value) {
+    throw new Error(`Missing required SpeedyPay configuration: ${name}`);
+  }
+  return value;
+}
+
+function getString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value && typeof value === 'object' && !Array.isArray(value));
+}
+
+function generateSpeedyPaySignature(params: SpeedyPayParams, secretKey: string): string {
+  const filteredParams: SpeedyPayParams = {};
   for (const [key, value] of Object.entries(params)) {
-    if (value !== null && value !== undefined && key !== 'sign') {
+    if (key !== 'sign') {
       filteredParams[key] = value;
     }
   }
 
-  // 2. Sort parameters alphabetically
-  const sortedKeys = Object.keys(filteredParams).sort();
-  
-  // 3. Concatenate key-value pairs with &
-  const concatenatedString = sortedKeys
-    .map(key => `${key}=${filteredParams[key]}`)
+  const concatenatedString = Object.keys(filteredParams)
+    .sort()
+    .map((key) => `${key}=${filteredParams[key]}`)
     .join('&');
 
-  // 4. Append secret key
-  const finalString = concatenatedString + '&' + secretKey;
-
-  // 5. Generate SHA256 hash
-  return crypto.createHash('sha256').update(finalString).digest('hex');
+  return crypto.createHash('sha256').update(`${concatenatedString}&${secretKey}`).digest('hex');
 }
 
-// 🌐 Make HTTP Request to SpeedyPay
-async function makeSpeedyPayRequest(url: string, payload: any) {
-  try {
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
+async function makeSpeedyPayRequest(url: string, payload: SpeedyPayParams): Promise<SpeedyPayResponse> {
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify(payload),
+  });
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+  if (!response.ok) {
+    throw new Error(`SpeedyPay request failed with status ${response.status}`);
+  }
+
+  const data: unknown = await response.json();
+  if (!isRecord(data)) {
+    throw new Error('SpeedyPay returned an invalid response shape');
+  }
+
+  return data;
+}
+
+export async function POST(request: NextRequest) {
+  if (process.env.ENABLE_DIRECT_SPEEDYPAY_PAYOUT_ROUTE !== 'true') {
+    return NextResponse.json({
+      success: false,
+      error: 'Direct SpeedyPay payout route is disabled. Use the controlled Money Core flow.',
+    }, {status: 403});
+  }
+
+  try {
+    const secretKey = requireEnv('SPEEDYPAY_SECRET_KEY');
+    const merchantSeq = requireEnv('SPEEDYPAY_MERCHANT_SEQ');
+    const baseUrl = requireEnv('SPEEDYPAY_BASE_URL').replace(/\/$/, '');
+    const notifyBaseUrl = requireEnv('SPEEDYPAY_NOTIFY_BASE_URL').replace(/\/$/, '');
+
+    const body = await request.json() as SpeedyPayRequestBody;
+    const amount = getString(body.amount);
+    const currency = getString(body.currency) || 'PHP';
+    const procId = getString(body.procId);
+    const procDetail = getString(body.procDetail);
+    const purposes = getString(body.purposes);
+    const firstName = getString(body.firstName);
+    const lastName = getString(body.lastName);
+    const mobilePhone = getString(body.mobilePhone);
+    const internalTransactionId = getString(body.internalTransactionId);
+
+    if (!amount || !procId || !procDetail || !purposes || !firstName || !lastName || !mobilePhone || !internalTransactionId) {
+      return NextResponse.json({success: false, error: 'Missing required fields'}, {status: 400});
     }
 
-    return await response.json();
-  } catch (error) {
-    console.error('SpeedyPay API request failed:', error);
-    throw error;
-  }
-}
+    const amountValue = Number.parseFloat(amount);
+    if (!Number.isFinite(amountValue) || amountValue <= 0) {
+      return NextResponse.json({success: false, error: 'Invalid amount'}, {status: 400});
+    }
 
-// 🚀 POST Handler for Payout Requests
-export async function POST(request: NextRequest) {
-  try {
-    // Parse request body
-    const body = await request.json();
-    const {
-      amount,
+    const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    const orderDate = new Date().toISOString().substring(0, 10);
+    const orderSeq = `SPEEDCASH_${internalTransactionId}`;
+
+    const payload: SpeedyPayParams = {
+      signType: 'SHA256',
+      timestamp,
+      merchSeq: merchantSeq,
+      orderSeq,
+      orderDate,
+      amount: amountValue.toFixed(2),
+      fee: '0.00',
       currency,
       procId,
       procDetail,
       purposes,
       firstName,
       lastName,
-      mobilePhone
-    } = body;
-
-    // ✅ Validate required fields
-    if (!amount || !procId || !procDetail || !purposes || !firstName || !lastName || !mobilePhone) {
-      return NextResponse.json({
-        success: false,
-        error: 'Missing required fields'
-      }, { status: 400 });
-    }
-
-    // ✅ Validate amount
-    const amountValue = parseFloat(amount);
-    if (isNaN(amountValue) || amountValue <= 0) {
-      return NextResponse.json({
-        success: false,
-        error: 'Invalid amount'
-      }, { status: 400 });
-    }
-
-    // 📅 Generate timestamps
-    const timestamp = new Date().toISOString().replace('T', ' ').substring(0, 19);
-    const orderDate = new Date().toISOString().substring(0, 10);
-    const orderSeq = 'CPAY_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-
-    // 📦 Prepare payload
-    const payload = {
-      signType: 'SHA256',
-      timestamp: timestamp,
-      merchSeq: SPEEDYPAY_CONFIG.merchantSeq,
-      orderSeq: orderSeq,
-      orderDate: orderDate,
-      amount: amountValue.toFixed(2),
-      fee: '0.00',
-      currency: currency || 'PHP',
-      procId: procId,
-      procDetail: procDetail,
-      purposes: purposes,
-      firstName: firstName,
-      lastName: lastName,
-      mobilePhone: mobilePhone,
-      notifyUrl: `${process.env.NEXT_PUBLIC_BASE_URL || 'https://applez-dch9v.web.app'}/api/speedypay/webhook`
+      mobilePhone,
+      notifyUrl: `${notifyBaseUrl}/api/speedypay/webhook`,
     };
 
-    // 🔐 Generate signature
-    const signature = generateSpeedyPaySignature(payload, SPEEDYPAY_CONFIG.secretKey);
-    (payload as any).sign = signature;
+    payload.sign = generateSpeedyPaySignature(payload, secretKey);
 
-    // 🚀 Send request to SpeedyPay
-    const baseUrl = process.env.NODE_ENV === 'production' 
-      ? SPEEDYPAY_CONFIG.prodBaseUrl 
-      : SPEEDYPAY_CONFIG.testBaseUrl;
-    
     const response = await makeSpeedyPayRequest(`${baseUrl}/cashOut.do`, payload);
+    const respCode = getString(response.respCode);
+    const respMessage = getString(response.respMessage);
 
-    // 📊 Log the request
-    console.log('SpeedyPay payout request:', {
+    console.log('SpeedyPay payout submitted', {
+      internalTransactionId,
       orderSeq,
       amount: amountValue,
-      procId,
-      respCode: response.respCode,
-      respMessage: response.respMessage
+      currency,
+      respCode: respCode || 'unknown',
     });
 
-    // ✅ Return response
-    if (response.respCode === '00000000') {
+    if (respCode === '00000000') {
       return NextResponse.json({
         success: true,
+        status: 'SUBMITTED_TO_PROVIDER',
+        message: 'Payout submitted to provider. This is not final settlement.',
         data: {
-          orderSeq: response.orderSeq || orderSeq,
-          transSeq: response.transSeq,
-          transState: response.transState,
-          respCode: response.respCode,
-          respMessage: response.respMessage
-        }
+          orderSeq: getString(response.orderSeq) || orderSeq,
+          transSeq: getString(response.transSeq),
+          transState: getString(response.transState),
+          respCode,
+          respMessage,
+        },
       });
-    } else {
-      return NextResponse.json({
-        success: false,
-        error: response.respMessage || 'Payout request failed',
-        data: {
-          orderSeq: response.orderSeq || orderSeq,
-          respCode: response.respCode,
-          respMessage: response.respMessage
-        }
-      }, { status: 400 });
     }
 
-  } catch (error) {
-    console.error('Payout API error:', error);
-    
     return NextResponse.json({
       success: false,
-      error: 'Internal server error'
-    }, { status: 500 });
+      error: respMessage || 'Payout request failed',
+      data: {
+        orderSeq: getString(response.orderSeq) || orderSeq,
+        respCode,
+        respMessage,
+      },
+    }, {status: 400});
+  } catch (error: unknown) {
+    console.error('SpeedyPay payout route failed', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+
+    return NextResponse.json({success: false, error: 'Internal server error'}, {status: 500});
   }
 }
 
-// 🔍 GET Handler for API info
 export async function GET() {
   return NextResponse.json({
     success: true,
-    message: 'SpeedyPay Payout API',
-    version: '1.0',
-    endpoints: {
-      payout: 'POST /api/speedypay/payout',
-      webhook: 'POST /api/speedypay/webhook',
-      balance: 'GET /api/speedypay/balance',
-      status: 'GET /api/speedypay/status/:orderSeq'
-    },
-    channels: {
-      majorBanks: 11,
-      eWallets: 9,
-      total: 20
-    }
+    message: 'SpeedyPay payout route is disabled by default and must not be used as final settlement.',
+    requiredFlag: 'ENABLE_DIRECT_SPEEDYPAY_PAYOUT_ROUTE=true',
   });
-} 
+}
