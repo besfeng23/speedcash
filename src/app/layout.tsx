@@ -1,10 +1,9 @@
-
 import './globals.css';
 import { ClientRoot } from './ClientRoot';
 
 export const metadata = {
-  title: 'CPay Investor Demo',
-  description: 'A secure, multi-tenant SaaS dashboard with beautiful logs and dark mode.',
+  title: 'Speedcash',
+  description: 'Speedcash application dashboard.',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
