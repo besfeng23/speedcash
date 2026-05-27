@@ -1,4 +1,3 @@
-
 'use client';
 
 import PartnerSidebarNav from "@/components/partner/sidebar-nav";
@@ -13,15 +12,20 @@ export default function PartnerLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, isLoading } = useAuth();
+  const { user, role, isLoading } = useAuth();
   const router = useRouter();
+  const isAuthorizedPartner = role === 'partner' || role === 'admin' || role === 'superadmin';
 
   useEffect(() => {
     if (!isLoading && !user) {
-      router.push('/login'); // Redirect unauthenticated users
+      router.replace('/login');
+      return;
     }
-    // In a real app, you would also check for a 'partner' role here.
-  }, [user, isLoading, router]);
+
+    if (!isLoading && user && !isAuthorizedPartner) {
+      router.replace('/login');
+    }
+  }, [user, role, isLoading, isAuthorizedPartner, router]);
 
   if (isLoading || !user) {
     return (
@@ -29,6 +33,10 @@ export default function PartnerLayout({
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
       </div>
     );
+  }
+
+  if (!isAuthorizedPartner) {
+    return null;
   }
 
   return (
@@ -39,7 +47,7 @@ export default function PartnerLayout({
           <PartnerSidebarNav isMobile />
         </MobileHeader>
         <main className="flex-1 items-start gap-4 p-4 sm:px-6 sm:py-0 md:gap-8">
-            {children}
+          {children}
         </main>
       </div>
     </div>
