@@ -1,6 +1,6 @@
 {
-  "name": "functions",
-  "description": "Cloud Functions for CPay",
+  "name": "speedcash-functions",
+  "description": "Cloud Functions for Speedcash",
   "scripts": {
     "build": "tsc",
     "lint": "eslint .",
