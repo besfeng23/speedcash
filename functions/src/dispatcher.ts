@@ -1,4 +1,3 @@
-
 import { onRequest, Request } from 'firebase-functions/v2/https';
 import { HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
@@ -10,84 +9,114 @@ import * as walletQueryHandlers from './wallet/queries';
 import * as kaiHandlers from './kai/handlers';
 import * as partnerHandlers from './partners/handlers';
 import * as integrationHandlers from './integrations/handlers';
-// import * as monitoring from './utils/monitoring';
 
-// Initialize Firebase Admin if not already initialized
 if (!admin.apps.length) {
   admin.initializeApp();
 }
 
-// Extend the Request type to include auth property
 interface AuthenticatedRequest extends Request {
   auth?: admin.auth.DecodedIdToken;
 }
 
-const setCorsHeaders = (res: any, origin: string | undefined) => {
-  res.set('Access-Control-Allow-Origin', origin || '*');
-  res.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+type HeaderResponse = {
+  set: (name: string, value: string) => void;
+};
+
+function getAllowedOrigins(): string[] {
+  return (process.env.CORS_ALLOWED_ORIGINS || 'http://localhost:3000')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+}
+
+function getAllowedOrigin(origin?: string): string | null {
+  if (!origin) return getAllowedOrigins()[0] || null;
+  return getAllowedOrigins().includes(origin) ? origin : null;
+}
+
+function setCorsHeaders(res: HeaderResponse, origin?: string): boolean {
+  const allowedOrigin = getAllowedOrigin(origin);
+  if (!allowedOrigin) return false;
+
+  res.set('Access-Control-Allow-Origin', allowedOrigin);
+  res.set('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
   res.set('Access-Control-Allow-Credentials', 'true');
   res.set('Access-Control-Max-Age', '3600');
   res.set('Vary', 'Origin');
-};
+  return true;
+}
 
-export const cpayDispatcher = onRequest({ 
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : 'Unknown error';
+}
+
+function isZodError(error: unknown): error is { name: string; errors: unknown } {
+  return Boolean(error && typeof error === 'object' && 'name' in error && (error as { name?: string }).name === 'ZodError');
+}
+
+export const cpayDispatcher = onRequest({
   region: 'asia-southeast1',
   timeoutSeconds: 60,
   memory: '256MiB',
   minInstances: 0,
-  maxInstances: 10
+  maxInstances: 10,
 }, async (req: AuthenticatedRequest, res) => {
   const startTime = Date.now();
   const origin = req.headers.origin;
-  
-  // Log incoming request
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} from ${origin}`);
-  
-  // Set CORS headers for all requests
-  setCorsHeaders(res, origin);
-  
-  // Handle preflight OPTIONS request
+  const corsAllowed = setCorsHeaders(res, origin);
+
+  console.log(`[${new Date().toISOString()}] dispatcher request`, {
+    method: req.method,
+    origin: origin || 'no-origin',
+    corsAllowed,
+  });
+
+  if (!corsAllowed && origin) {
+    res.status(403).json({ error: 'Origin not allowed' });
+    return;
+  }
+
   if (req.method === 'OPTIONS') {
-    console.log(`[${new Date().toISOString()}] Handling OPTIONS preflight request`);
-    // await monitoring.logCorsRequest(req, res, true);
     res.status(204).send('');
     return;
   }
 
-  // Verify authentication for all requests except OPTIONS
-  if (req.method !== 'OPTIONS') {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      console.log(`[${new Date().toISOString()}] Missing or invalid authorization header`);
-      res.status(401).json({ error: 'Authentication required' });
-      return;
-    }
+  if (req.method !== 'POST') {
+    res.status(405).json({ error: 'Method not allowed' });
+    return;
+  }
 
-    try {
-      const idToken = authHeader.split('Bearer ')[1];
-      const decodedToken = await admin.auth().verifyIdToken(idToken);
-      req.auth = decodedToken;
-    } catch (error) {
-      console.log(`[${new Date().toISOString()}] Invalid token:`, error);
-      res.status(401).json({ error: 'Invalid authentication token' });
-      return;
-    }
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    console.log(`[${new Date().toISOString()}] dispatcher auth missing`);
+    res.status(401).json({ error: 'Authentication required' });
+    return;
+  }
+
+  try {
+    const idToken = authHeader.split('Bearer ')[1];
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    req.auth = decodedToken;
+  } catch (error: unknown) {
+    console.log(`[${new Date().toISOString()}] dispatcher auth failed`, { message: getErrorMessage(error) });
+    res.status(401).json({ error: 'Invalid authentication token' });
+    return;
   }
 
   try {
     const { action, data: payload } = req.body;
-    
-    if (!action) {
-      console.log(`[${new Date().toISOString()}] Missing action in request body`);
+
+    if (!action || typeof action !== 'string') {
+      console.log(`[${new Date().toISOString()}] dispatcher missing action`);
       res.status(400).json({ error: 'Action is required' });
       return;
     }
 
-    console.log(`[${new Date().toISOString()}] Processing action: ${action}`);
-    
-    let result: any;
-    
+    console.log(`[${new Date().toISOString()}] dispatcher action`, { action });
+
+    let result: unknown;
+
     switch (action) {
       case 'adminApproveWithdrawal': result = await adminHandlers.adminApproveWithdrawalHandler(payload, req); break;
       case 'adminRejectWithdrawal': result = await adminHandlers.adminRejectWithdrawalHandler(payload, req); break;
@@ -133,105 +162,63 @@ export const cpayDispatcher = onRequest({
       case 'partnerUpdateProfile': result = await partnerHandlers.partnerUpdateProfileHandler(payload, req); break;
       case 'partnerGetTransactions': result = await partnerHandlers.partnerGetTransactionsHandler(payload, req); break;
       case 'partnerGetActivity': result = await partnerHandlers.partnerGetActivityHandler(payload, req); break;
-      // Payment Gateway Integration Handlers
       case 'processInstaPayTransfer': result = await integrationHandlers.processInstaPayTransferHandler(payload, req); break;
       case 'processGCashTransfer': result = await integrationHandlers.processGCashTransferHandler(payload, req); break;
       case 'processMayaTransfer': result = await integrationHandlers.processMayaTransferHandler(payload, req); break;
       case 'processKoreanBankTransfer': result = await integrationHandlers.processKoreanBankTransferHandler(payload, req); break;
       case 'processNewPartnerTransfer': result = await integrationHandlers.processNewPartnerTransferHandler(payload, req); break;
-      // Korean Mall Integration Handlers
       case 'createKoreanMallStore': result = await integrationHandlers.createKoreanMallStoreHandler(payload, req); break;
       case 'processKoreanMallPayment': result = await integrationHandlers.processKoreanMallPaymentHandler(payload, req); break;
       case 'getKoreanMallStats': result = await integrationHandlers.getKoreanMallStatsHandler(payload, req); break;
-      // Webhook Handlers
       case 'handleInstaPayWebhook': result = await integrationHandlers.handleInstaPayWebhookHandler(payload, req); break;
       case 'handleGCashWebhook': result = await integrationHandlers.handleGCashWebhookHandler(payload, req); break;
       case 'handleMayaWebhook': result = await integrationHandlers.handleMayaWebhookHandler(payload, req); break;
       case 'handleKoreanBankWebhook': result = await integrationHandlers.handleKoreanBankWebhookHandler(payload, req); break;
       default:
-        console.log(`[${new Date().toISOString()}] Unknown action: ${action}`);
-        // await monitoring.logApiCall(req, action, false, 'Unknown action');
+        console.log(`[${new Date().toISOString()}] dispatcher unknown action`, { action });
         res.status(400).json({ error: 'Unknown action' });
         return;
     }
-    
+
     const duration = Date.now() - startTime;
-    console.log(`[${new Date().toISOString()}] Action ${action} completed successfully in ${duration}ms`);
-    
-    // await monitoring.logApiCall(req, action, true);
-    // await monitoring.logPerformance(action, duration);
-    
+    console.log(`[${new Date().toISOString()}] dispatcher action complete`, { action, duration });
     res.json({ data: result });
-  } catch (error: any) {
+  } catch (error: unknown) {
     const duration = Date.now() - startTime;
-    console.error(`[${new Date().toISOString()}] cpayDispatcher error for action ${req.body?.action || 'unknown'} (${duration}ms):`, error);
-    
-    // Ensure CORS headers are set even for errors
+    const action = typeof req.body?.action === 'string' ? req.body.action : 'unknown';
+    console.error(`[${new Date().toISOString()}] dispatcher action failed`, { action, duration, message: getErrorMessage(error) });
     setCorsHeaders(res, origin);
-    
-    // Log the error
-    // await monitoring.logError(error, {
-    //   action: req.body?.action || 'unknown',
-    //   method: req.method,
-    //   origin,
-    //   duration
-    // });
-    
-    // Handle different types of errors with appropriate status codes
+
     if (error instanceof HttpsError) {
-      // Convert Firebase Functions HttpsError to appropriate HTTP status
       const statusCode = getHttpStatusFromHttpsError(error);
-      console.log(`[${new Date().toISOString()}] HttpsError converted to HTTP ${statusCode}:`, error.message);
       res.status(statusCode).json({ error: error.message });
-    } else if (error.name === 'ZodError') {
-      console.log(`[${new Date().toISOString()}] Validation error:`, error.errors);
-      // await monitoring.logApiCall(req, req.body?.action || 'unknown', false, 'Validation error');
+    } else if (isZodError(error)) {
       res.status(400).json({ error: 'Invalid request format', details: error.errors });
     } else {
-      // await monitoring.logApiCall(req, req.body?.action || 'unknown', false, error.message);
-      res.status(500).json({ error: error.message || 'Internal server error' });
+      res.status(500).json({ error: 'Internal server error' });
     }
   }
 });
 
-// Helper function to convert Firebase Functions HttpsError to HTTP status codes
 function getHttpStatusFromHttpsError(error: HttpsError): number {
   switch (error.code) {
-    case 'ok':
-      return 200;
-    case 'cancelled':
-      return 499; // Client closed request
-    case 'unknown':
-      return 500;
-    case 'invalid-argument':
-      return 400;
-    case 'deadline-exceeded':
-      return 504;
-    case 'not-found':
-      return 404;
-    case 'already-exists':
-      return 409;
-    case 'permission-denied':
-      return 403;
-    case 'resource-exhausted':
-      return 429;
-    case 'failed-precondition':
-      return 400;
-    case 'aborted':
-      return 409;
-    case 'out-of-range':
-      return 400;
-    case 'unimplemented':
-      return 501;
-    case 'internal':
-      return 500;
-    case 'unavailable':
-      return 503;
-    case 'data-loss':
-      return 500;
-    case 'unauthenticated':
-      return 401;
-    default:
-      return 500;
+    case 'ok': return 200;
+    case 'cancelled': return 499;
+    case 'unknown': return 500;
+    case 'invalid-argument': return 400;
+    case 'deadline-exceeded': return 504;
+    case 'not-found': return 404;
+    case 'already-exists': return 409;
+    case 'permission-denied': return 403;
+    case 'resource-exhausted': return 429;
+    case 'failed-precondition': return 400;
+    case 'aborted': return 409;
+    case 'out-of-range': return 400;
+    case 'unimplemented': return 501;
+    case 'internal': return 500;
+    case 'unavailable': return 503;
+    case 'data-loss': return 500;
+    case 'unauthenticated': return 401;
+    default: return 500;
   }
 }
