@@ -1,180 +1,166 @@
-# Settings to manage and configure a Firebase App Hosting backend.
+# Firebase App Hosting configuration for Speedcash.
+# Do not commit live secrets here. Secret values must be supplied through
+# Google Secret Manager and referenced with `secret:` entries below.
 # https://firebase.google.com/docs/app-hosting/configure
 
 runConfig:
-  # Increase this value if you'd like to automatically spin up
-  # more instances in response to increased traffic.
   maxInstances: 3
-  # Minimum instances to keep warm (reduces cold starts)
-  minInstances: 1
+  minInstances: 0
 
-# Ensure SSR is used instead of static export
 buildConfig:
   framework: nextjs
   buildCommand: npm run build
   outputDirectory: .next
-  nodeVersion: 18
-
-# ==================================================================
-# ENVIRONMENT VARIABLES FOR PRODUCTION DEPLOYMENT
-# ==================================================================
-# SECURITY NOTE: Replace all placeholder values marked with
-# "REPLACE_WITH_PRODUCTION_VALUE" before deploying to production
-# ==================================================================
+  nodeVersion: 20
 
 env:
-  # ==================================================================
-  # FIREBASE CONFIGURATION (Public - Safe to include)
-  # ==================================================================
-  - variable: "NEXT_PUBLIC_FIREBASE_API_KEY"
-    value: "AIzaSyCWFnR9M_MCTmh0q5pmrrPSpmw36hoAOy0"
-  - variable: "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN"
-    value: "applez-dch9v.firebaseapp.com"
-  - variable: "NEXT_PUBLIC_FIREBASE_DATABASE_URL"
-    value: "https://applez-dch9v-default-rtdb.asia-southeast1.firebasedatabase.app"
-  - variable: "NEXT_PUBLIC_FIREBASE_PROJECT_ID"
-    value: "applez-dch9v"
-  - variable: "NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET"
-    value: "applez-dch9v.firebasestorage.app"
-  - variable: "NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID"
-    value: "759830378563"
-  - variable: "NEXT_PUBLIC_FIREBASE_APP_ID"
-    value: "1:759830378563:web:811b2bf8d6c11f9b80bcf6"
-  - variable: "NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID"
-    value: "G-SHX94EGT2W"
-  
-  # ==================================================================
-  # ENVIRONMENT & PROJECT INFORMATION
-  # ==================================================================
-  - variable: "NODE_ENV"
-    value: "production"
-  - variable: "NEXT_PUBLIC_ENVIRONMENT"
-    value: "production"
-  - variable: "PROJECT_NAME"
-    value: "applez"
-  - variable: "PROJECT_NUMBER"
-    value: "759830378563"
-  - variable: "PARENT_ORG"
-    value: "redapplex.com"
-  - variable: "SUPPORT_EMAIL"
-    value: "engage@redapplex.com"
-  - variable: "APP_VERSION"
-    value: "1.0.0"
-  
-  # ==================================================================
-  # AI CONFIGURATION (CRITICAL: Replace with production keys)
-  # ==================================================================
-  - variable: "GEMINI_API_KEY"
-    value: "AIzaSyD7od9jyd2-nvTzBVNV-ssPGBDmw4ztKbY"
-  
-  # ==================================================================
-  # CHANNEL AGGREGATOR CONFIGURATION (Payment Gateway)
-  # ==================================================================
-  - variable: "CHANNEL_AGGREGATOR_MERCHANT_NAME"
-    value: "CPAY"
-  - variable: "CHANNEL_AGGREGATOR_MERCHANT_NO"
-    value: "300000064613"
-  - variable: "CHANNEL_AGGREGATOR_SHA256_KEY"
-    value: "uck6lo8sdjaarqf3sohdoovdvvn0kdnk"
-  - variable: "CHANNEL_AGGREGATOR_ENDPOINT"
-    value: "https://api.channelaggregator.com"
-  
-  # ==================================================================
-  # PAYMENT GATEWAY INTEGRATIONS
-  # ==================================================================
-  - variable: "EMANGO_MICROSERVICE_URL"
-    value: "http://localhost:5000"
-  - variable: "EMANGO_SECRET_KEY"
-    value: "uck6lo8sdjaarqf3sohdoovdvvn0kdnk"
-  - variable: "SPEEDYPAY_SECRET_KEY"
-    value: "uck6lo8sdjaarqf3sohdoovdvvn0kdnk"
-  - variable: "SPEEDYPAY_MERCHANT_SEQ"
-    value: "300000064613"
-  
-  # ==================================================================
-  # API BASE URLS (Production endpoints)
-  # ==================================================================
-  - variable: "NEXT_PUBLIC_API_BASE_URL"
-    value: "https://asia-southeast1-applez-dch9v.cloudfunctions.net"
-  - variable: "NEXT_PUBLIC_BASE_URL"
-    value: "https://applez-dch9v.web.app"
-  
-  # ==================================================================
-  # EMAIL SERVICE CONFIGURATION (Mailchimp)
-  # ==================================================================
-  - variable: "MAILCHIMP_SERVER_PREFIX"
-    value: "us18"
-  - variable: "MAILCHIMP_AUDIENCE_ID"
-    value: "9a0d47ea7e"
-  - variable: "MAILCHIMP_RETRY_ATTEMPTS"
-    value: "2"
-  - variable: "MAILCHIMP_CONTACT_STATUS"
-    value: "subscribed"
-  - variable: "FROM_EMAIL"
-    value: "noreply@redapplex.com"
-  - variable: "FROM_NAME"
-    value: "CPay"
-  - variable: "REPLY_TO_EMAIL"
-    value: "support@redapplex.com"
-  
-  # ==================================================================
-  # WEBHOOK SECURITY
-  # ==================================================================
-  - variable: "WEBHOOK_SECRET"
-    value: "nXit5kgCtZkx+NIftusRzpTHwycamBcgDc2SWfVGxNM="
-  - variable: "WEBHOOK_TIMEOUT"
+  # Public Firebase web configuration. Replace placeholders during environment setup.
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: replace_with_firebase_web_api_key
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: replace_with_project.firebaseapp.com
+  - variable: NEXT_PUBLIC_FIREBASE_DATABASE_URL
+    value: https://replace_with_project-default-rtdb.asia-southeast1.firebasedatabase.app
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: replace_with_project_id
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: replace_with_project.firebasestorage.app
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: replace_with_sender_id
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: replace_with_app_id
+  - variable: NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+    value: replace_with_measurement_id
+
+  # Environment and routing.
+  - variable: NODE_ENV
+    value: production
+  - variable: NEXT_PUBLIC_ENVIRONMENT
+    value: production
+  - variable: PROJECT_NAME
+    value: speedcash
+  - variable: APP_VERSION
+    value: 0.1.0
+  - variable: NEXT_PUBLIC_API_BASE_URL
+    value: https://asia-southeast1-replace_with_project_id.cloudfunctions.net/cpayDispatcher
+  - variable: NEXT_PUBLIC_BASE_URL
+    value: https://replace_with_speedcash_domain
+  - variable: CORS_ALLOWED_ORIGINS
+    value: https://replace_with_speedcash_domain
+  - variable: SUPPORT_EMAIL
+    value: support@example.com
+  - variable: FROM_EMAIL
+    value: noreply@example.com
+  - variable: FROM_NAME
+    value: Speedcash
+  - variable: REPLY_TO_EMAIL
+    value: support@example.com
+
+  # Operational toggles. Keep real-money integrations disabled until provider callbacks,
+  # reconciliation, and ledger checks pass in staging.
+  - variable: ENABLE_RATE_LIMITING
+    value: "true"
+  - variable: ENABLE_2FA
+    value: "true"
+  - variable: ENABLE_WEBHOOK_VERIFICATION
+    value: "true"
+  - variable: ENABLE_KYC
+    value: "true"
+  - variable: ENABLE_AI_ASSISTANT
+    value: "true"
+  - variable: ENABLE_PARTNER_INTEGRATIONS
+    value: "true"
+  - variable: ENABLE_PAYMENT_GATEWAYS
+    value: "false"
+  - variable: ENABLE_KOREAN_MALL_INTEGRATION
+    value: "false"
+  - variable: AUTO_SETTLEMENT_ENABLED
+    value: "false"
+  - variable: WEBHOOK_TIMEOUT
     value: "30000"
-  
-  # ==================================================================
-  # SECURITY CONFIGURATION
-  # ==================================================================
-  - variable: "ENABLE_RATE_LIMITING"
-    value: "true"
-  - variable: "ENABLE_2FA"
-    value: "true"
-  - variable: "ENABLE_WEBHOOK_VERIFICATION"
-    value: "true"
-  - variable: "JWT_SECRET"
-    value: "1Hk2T6pWpHNGIQ0XwXBuUUm3fV2K0s1XxRbALxh3PnE="
-  - variable: "ENCRYPTION_KEY"
-    value: "Em0m8jI7p2wPrnAVLPx/hfxIKJUmtgblaZo5uEtQ++c="
-  
-  # ==================================================================
-  # MONITORING AND LOGGING
-  # ==================================================================
-  - variable: "LOG_LEVEL"
-    value: "info"
-  
-  # ==================================================================
-  # FEATURE FLAGS (Production settings)
-  # ==================================================================
-  - variable: "ENABLE_KYC"
-    value: "true"
-  - variable: "ENABLE_AI_ASSISTANT"
-    value: "true"
-  - variable: "ENABLE_PARTNER_INTEGRATIONS"
-    value: "true"
-  - variable: "ENABLE_PAYMENT_GATEWAYS"
-    value: "true"
-  - variable: "ENABLE_KOREAN_MALL_INTEGRATION"
-    value: "true"
-  
-  # ==================================================================
-  # PERFORMANCE CONFIGURATION
-  # ==================================================================
-  - variable: "CACHE_TTL"
+  - variable: LOG_LEVEL
+    value: info
+  - variable: CACHE_TTL
     value: "3600"
-  - variable: "RATE_LIMIT_WINDOW"
+  - variable: RATE_LIMIT_WINDOW
     value: "900000"
-  - variable: "RATE_LIMIT_MAX_REQUESTS"
+  - variable: RATE_LIMIT_MAX_REQUESTS
     value: "100"
-  
-  # ==================================================================
-  # SETTLEMENT CONFIGURATION
-  # ==================================================================
-  - variable: "AUTO_SETTLEMENT_ENABLED"
-    value: "true"
-  - variable: "SETTLEMENT_FREQUENCY"
-    value: "daily"
-  - variable: "MINIMUM_SETTLEMENT_AMOUNT"
+  - variable: SETTLEMENT_FREQUENCY
+    value: daily
+  - variable: MINIMUM_SETTLEMENT_AMOUNT
     value: "100000"
+
+  # Secret Manager references. Create/rotate these in GCP before production use.
+  - variable: GEMINI_API_KEY
+    secret: GEMINI_API_KEY
+  - variable: OPENAI_API_KEY
+    secret: OPENAI_API_KEY
+  - variable: CHANNEL_AGGREGATOR_MERCHANT_NAME
+    secret: CHANNEL_AGGREGATOR_MERCHANT_NAME
+  - variable: CHANNEL_AGGREGATOR_MERCHANT_NO
+    secret: CHANNEL_AGGREGATOR_MERCHANT_NO
+  - variable: CHANNEL_AGGREGATOR_SHA256_KEY
+    secret: CHANNEL_AGGREGATOR_SHA256_KEY
+  - variable: CHANNEL_AGGREGATOR_ENDPOINT
+    secret: CHANNEL_AGGREGATOR_ENDPOINT
+  - variable: EMANGO_MICROSERVICE_URL
+    secret: EMANGO_MICROSERVICE_URL
+  - variable: EMANGO_SECRET_KEY
+    secret: EMANGO_SECRET_KEY
+  - variable: SPEEDYPAY_SECRET_KEY
+    secret: SPEEDYPAY_SECRET_KEY
+  - variable: SPEEDYPAY_MERCHANT_SEQ
+    secret: SPEEDYPAY_MERCHANT_SEQ
+  - variable: PAYMENT_GATEWAY_KEY
+    secret: PAYMENT_GATEWAY_KEY
+  - variable: PAYMENT_GATEWAY_SECRET
+    secret: PAYMENT_GATEWAY_SECRET
+  - variable: WEBHOOK_SECRET
+    secret: WEBHOOK_SECRET
+  - variable: INSTAPAY_WEBHOOK_SECRET
+    secret: INSTAPAY_WEBHOOK_SECRET
+  - variable: GCASH_WEBHOOK_SECRET
+    secret: GCASH_WEBHOOK_SECRET
+  - variable: MAYA_WEBHOOK_SECRET
+    secret: MAYA_WEBHOOK_SECRET
+  - variable: KOREAN_BANK_WEBHOOK_SECRET
+    secret: KOREAN_BANK_WEBHOOK_SECRET
+  - variable: JWT_SECRET
+    secret: JWT_SECRET
+  - variable: ENCRYPTION_KEY
+    secret: ENCRYPTION_KEY
+  - variable: MAILCHIMP_API_KEY
+    secret: MAILCHIMP_API_KEY
+  - variable: MAILCHIMP_SERVER_PREFIX
+    secret: MAILCHIMP_SERVER_PREFIX
+  - variable: MAILCHIMP_AUDIENCE_ID
+    secret: MAILCHIMP_AUDIENCE_ID
+  - variable: BANK_API_KEY
+    secret: BANK_API_KEY
+  - variable: PARTNER_API_KEY
+    secret: PARTNER_API_KEY
+  - variable: INSTAPAY_API_KEY
+    secret: INSTAPAY_API_KEY
+  - variable: INSTAPAY_SECRET_KEY
+    secret: INSTAPAY_SECRET_KEY
+  - variable: INSTAPAY_ENDPOINT
+    secret: INSTAPAY_ENDPOINT
+  - variable: GCASH_API_KEY
+    secret: GCASH_API_KEY
+  - variable: GCASH_SECRET_KEY
+    secret: GCASH_SECRET_KEY
+  - variable: GCASH_ENDPOINT
+    secret: GCASH_ENDPOINT
+  - variable: MAYA_API_KEY
+    secret: MAYA_API_KEY
+  - variable: MAYA_SECRET_KEY
+    secret: MAYA_SECRET_KEY
+  - variable: MAYA_ENDPOINT
+    secret: MAYA_ENDPOINT
+  - variable: KOREAN_BANK_API_KEY
+    secret: KOREAN_BANK_API_KEY
+  - variable: KOREAN_BANK_SECRET_KEY
+    secret: KOREAN_BANK_SECRET_KEY
+  - variable: KOREAN_BANK_ENDPOINT
+    secret: KOREAN_BANK_ENDPOINT
