@@ -1,4 +1,3 @@
-
 import { HttpsError } from 'firebase-functions/v2/https';
 import * as admin from 'firebase-admin';
 import { z } from 'zod';
@@ -24,6 +23,7 @@ const ensureIsAdmin = (context: any) => {
 // --- Schemas ---
 const approvalSchema = z.object({
   transactionId: z.string(),
+  comment: z.string().optional(),
 });
 const rejectWithdrawalSchema = z.object({
     transactionId: z.string(),
@@ -55,33 +55,43 @@ const partnerStatusSchema = z.object({
     reason: z.string().optional(),
 });
 
-
 // --- Handler Implementations ---
 
 export async function adminApproveWithdrawalHandler(data: any, context: any) {
   const adminUid = ensureIsAdmin(context);
-  const { transactionId } = approvalSchema.parse(data);
+  const { transactionId, comment } = approvalSchema.parse(data);
 
   const transactionRef = db.doc(`transactions/${transactionId}`);
   const cashoutRequestRef = db.doc(`cashout_requests/${transactionId}`);
 
-  const transactionDoc = await transactionRef.get();
-  if (!transactionDoc.exists || transactionDoc.data()?.type !== 'cash_out') {
-    throw new HttpsError('not-found', 'Cash-out transaction not found.');
-  }
-
-  // --- Start Payment Gateway Simulation ---
-  await transactionRef.update({ status: 'PROCESSING' });
-  await new Promise(resolve => setTimeout(resolve, 2000));
-  // --- End Payment Gateway Simulation ---
-
   await db.runTransaction(async (t) => {
-    t.update(transactionRef, { status: 'COMPLETED' });
-    t.update(cashoutRequestRef, { status: 'COMPLETED', reviewedBy: adminUid });
+    const transactionDoc = await t.get(transactionRef);
+    if (!transactionDoc.exists || transactionDoc.data()?.type !== 'cash_out') {
+      throw new HttpsError('not-found', 'Cash-out transaction not found.');
+    }
+
+    const currentStatus = transactionDoc.data()?.status;
+    if (currentStatus !== 'PENDING_APPROVAL') {
+      throw new HttpsError('failed-precondition', `Cash-out is not pending approval. Current status: ${currentStatus || 'UNKNOWN'}`);
+    }
+
+    const reviewedAt = admin.firestore.FieldValue.serverTimestamp();
+    const updatePayload = {
+      status: 'SUBMITTED_TO_GATEWAY',
+      providerStatus: 'AWAITING_PROVIDER_CONFIRMATION',
+      reviewedBy: adminUid,
+      reviewedAt,
+      reviewComment: comment || null,
+      updatedAt: reviewedAt,
+      // Do not mark COMPLETED here. Completion must come only from trusted provider confirmation.
+    };
+
+    t.update(transactionRef, updatePayload);
+    t.update(cashoutRequestRef, updatePayload);
   });
 
-  await auditLog({ uid: adminUid }, 'ADMIN_ACTION', { action: 'APPROVE_WITHDRAWAL', transactionId });
-  return { success: true, message: 'Withdrawal approved and is being processed.' };
+  await auditLog({ uid: adminUid }, 'ADMIN_ACTION', { action: 'APPROVE_WITHDRAWAL', transactionId, comment });
+  return { success: true, status: 'SUBMITTED_TO_GATEWAY', message: 'Withdrawal approved for provider submission. It is not completed until provider confirmation is received.' };
 }
 
 export async function adminRejectWithdrawalHandler(data: any, context: any) {
@@ -108,8 +118,8 @@ export async function adminRejectWithdrawalHandler(data: any, context: any) {
 
     await db.runTransaction(async (t) => {
         t.update(userWalletRef, { balance: admin.firestore.FieldValue.increment(amount) });
-        t.update(transactionRef, { status: 'REJECTED', rejectionReason: reason });
-        t.update(cashoutRequestRef, { status: 'REJECTED', reviewedBy: adminUid });
+        t.update(transactionRef, { status: 'REJECTED', rejectionReason: reason, reviewedBy: adminUid, reviewedAt: admin.firestore.FieldValue.serverTimestamp() });
+        t.update(cashoutRequestRef, { status: 'REJECTED', rejectionReason: reason, reviewedBy: adminUid, reviewedAt: admin.firestore.FieldValue.serverTimestamp() });
     });
 
     await auditLog({ uid: adminUid }, 'ADMIN_ACTION', { action: 'REJECT_WITHDRAWAL', transactionId, reason });
@@ -128,7 +138,6 @@ export async function adminGetUsersHandler(data: any, context: any) {
     ensureIsAdmin(context);
     const { limit } = paginationSchema.parse(data);
     
-    // Auth user list doesn't support ordering, so we fetch from firestore first
     const usersSnapshot = await db.collection('users').orderBy('createdAt', 'desc').limit(limit).get();
     
     const uids = usersSnapshot.docs.map(u => u.id);
@@ -147,7 +156,6 @@ export async function adminGetUsersHandler(data: any, context: any) {
         const userRecord = authUsersData[doc.id];
         
         if (!userRecord) {
-            // This can happen if a user was deleted from Auth but not Firestore
             return null;
         }
 
@@ -161,7 +169,7 @@ export async function adminGetUsersHandler(data: any, context: any) {
             createdAt: userRecord.metadata.creationTime,
             lastSeen: userRecord.metadata.lastSignInTime,
         };
-    }).filter(Boolean); // Filter out any nulls
+    }).filter(Boolean);
 
     return { users };
 }
@@ -175,7 +183,6 @@ export async function adminGetUserHandler(data: any, context: any) {
     const [userSnapshot, authUser] = await Promise.all([userDocRef.get(), authUserPromise]);
 
     if (!userSnapshot.exists) {
-        // This handles the case where a user exists in Auth but not in Firestore, preventing a crash.
         throw new HttpsError('not-found', 'User data not found in the database. The user may not have completed signup.');
     }
     
@@ -282,9 +289,14 @@ export async function adminGetDashboardStatsHandler(_data: any, context: any) {
         return sum + (doc.data().amount || 0);
     }, 0);
 
+    const pendingKyc = pendingKycSnapshot.size;
+    const pendingWithdrawals = pendingWithdrawalsSnapshot.size;
+
     return {
-        pendingKycCount: pendingKycSnapshot.size,
-        pendingWithdrawalsCount: pendingWithdrawalsSnapshot.size,
+        pendingKyc,
+        pendingWithdrawals,
+        pendingKycCount: pendingKyc,
+        pendingWithdrawalsCount: pendingWithdrawals,
         newUsers24h: newUsersSnapshot.size,
         totalTxnVolume24h,
     };
@@ -453,7 +465,6 @@ export async function adminGetUserTransactionsHandler(data: any, context: any) {
         offset: z.number().int().nonnegative().optional().default(0)
     }).parse(data);
 
-    // Verify user exists
     const userRef = db.doc(`users/${uid}`);
     const userDoc = await userRef.get();
     
