@@ -1,25 +1,49 @@
-
 "use client";
 
 import { useMutation, useQuery, useQueryClient, UseQueryOptions, QueryKey } from '@tanstack/react-query';
-import { getFunctions, httpsCallable, HttpsCallableResult } from 'firebase/functions';
 import { useToast } from '@/hooks/use-toast';
-import { app } from '@/lib/firebase';
 import { useAuth } from './useAuth';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
-// Use our CORS proxy to handle Firebase Functions CORS issues
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '/api/cors-proxy';
+const rawApiBaseUrl = process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
+const normalizedApiBaseUrl = rawApiBaseUrl?.replace(/\/$/, '');
+const API_BASE_URL = normalizedApiBaseUrl
+  ? normalizedApiBaseUrl.endsWith('/cpayDispatcher')
+    ? normalizedApiBaseUrl
+    : `${normalizedApiBaseUrl}/cpayDispatcher`
+  : '/api/cors-proxy';
 
-// This type helps us define that the payload will be wrapped with an idToken.
-type DispatcherPayload<T> = {
-  idToken: string;
-  payload: T;
-  action: string;
-};
+const SENSITIVE_KEYS = new Set([
+  'accountNumber',
+  'account_number',
+  'mobileNumber',
+  'mobile_number',
+  'recipientMobileNumber',
+  'bankDetails',
+  'recipientInfo',
+  'signature',
+  'authorization',
+  'idToken',
+]);
 
-// Generic function to call the dispatcher, now with authentication handling
+function redactForLog(value: unknown): unknown {
+  if (Array.isArray(value)) {
+    return value.map(redactForLog);
+  }
+
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>).map(([key, entryValue]) => [
+        key,
+        SENSITIVE_KEYS.has(key) ? '[REDACTED]' : redactForLog(entryValue),
+      ])
+    );
+  }
+
+  return value;
+}
+
 async function callDispatcher<TRequest, TResponse>(
   action: string,
   payload: TRequest,
@@ -28,35 +52,32 @@ async function callDispatcher<TRequest, TResponse>(
   if (!idToken) {
     throw new Error('Authentication token is missing. Please log in.');
   }
-  
+
   try {
-    console.log(`[API Call] Calling action: ${action}`, { payload, hasToken: !!idToken });
-    
-    // Use our CORS proxy
+    console.log(`[API Call] ${action}`, { payload: redactForLog(payload), hasToken: true });
+
     const response = await fetch(API_BASE_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${idToken}`,
-        'Accept': 'application/json'
+        Authorization: `Bearer ${idToken}`,
+        Accept: 'application/json',
       },
       body: JSON.stringify({ action, data: payload }),
-      credentials: 'include'
     });
-    
+
     console.log(`[API Call] Response status: ${response.status} for action: ${action}`);
-    
+
     if (!response.ok) {
       let errorData;
       try {
         errorData = await response.json();
-      } catch (parseError) {
+      } catch (_parseError) {
         errorData = { error: response.statusText };
       }
-      
-      console.error(`[API Call] Error response for action ${action}:`, errorData);
-      
-      // Handle specific error cases
+
+      console.error(`[API Call] Error response for action ${action}:`, redactForLog(errorData));
+
       if (response.status === 401) {
         throw new Error('Authentication required. Please log in again.');
       } else if (response.status === 400) {
@@ -67,23 +88,22 @@ async function callDispatcher<TRequest, TResponse>(
         throw new Error(errorData.error || `Request failed with status ${response.status}`);
       }
     }
-    
+
     const data = await response.json();
-    console.log(`[API Call] Success response for action ${action}:`, data);
-    
+    console.log(`[API Call] Success response for action ${action}`);
+
     if (data.error) {
       throw new Error(data.error);
     }
-    
+
     return data.data as TResponse;
   } catch (error: unknown) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-    console.error(`[API Call] Error calling action ${action}:`, error);
+    console.error(`[API Call] Error calling action ${action}:`, errorMessage);
     throw new Error(errorMessage);
   }
 }
 
-// Hook for making API calls with authentication
 export function useApi<TResponse = unknown, TRequest = unknown>(actionName: string) {
   const { user, logout } = useAuth();
   const { toast } = useToast();
@@ -95,36 +115,32 @@ export function useApi<TResponse = unknown, TRequest = unknown>(actionName: stri
       if (!user) {
         throw new Error('User not authenticated');
       }
-      
-      // Get fresh ID token
+
       const idToken = await user.getIdToken(true);
       return callDispatcher<TRequest, TResponse>(actionName, payload, idToken);
     },
     onError: (error: Error) => {
-      console.error(`[useApi] Error in ${actionName}:`, error);
-      
-      // Handle authentication errors
+      console.error(`[useApi] Error in ${actionName}:`, error.message);
+
       if (error.message.includes('Authentication') || error.message.includes('log in')) {
         toast({
-          title: "Session Expired",
-          description: "Please log in again to continue.",
-          variant: "destructive",
+          title: 'Session Expired',
+          description: 'Please log in again to continue.',
+          variant: 'destructive',
         });
-        
-        // Clear user session and redirect to login
+
         logout();
         router.push('/login');
         return;
       }
-      
+
       toast({
-        title: "Error",
+        title: 'Error',
         description: error.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     },
     onSuccess: () => {
-      // Invalidate relevant queries after successful mutation
       queryClient.invalidateQueries({ queryKey: ['api'] });
     },
   });
@@ -132,16 +148,14 @@ export function useApi<TResponse = unknown, TRequest = unknown>(actionName: stri
   return mutation;
 }
 
-// Direct API call function
 export async function apiCall<TResponse = unknown>(action: string, payload?: unknown, idToken?: string | null): Promise<TResponse> {
   if (!idToken) {
     throw new Error('Authentication token is required');
   }
-  
+
   return callDispatcher(action, payload || {}, idToken);
 }
 
-// Hook for making authenticated queries
 export function useApiQuery<TResponse = unknown>(
   action: string,
   payload?: unknown,
@@ -157,39 +171,33 @@ export function useApiQuery<TResponse = unknown>(
       if (!user) {
         throw new Error('User not authenticated');
       }
-      // Get fresh ID token
       const idToken = await user.getIdToken(true);
       return callDispatcher(action, payload || {}, idToken);
     },
-    enabled: !!user, // Only run query if user is authenticated
+    enabled: !!user,
     retry: (failureCount, error) => {
-      // Don't retry authentication errors
       if (error.message.includes('Authentication') || error.message.includes('401')) {
         return false;
       }
-      // Retry other errors up to 2 times
       return failureCount < 2;
     },
     ...options,
   });
 
-  // Fix: Move error handling to useEffect to prevent infinite loops
   useEffect(() => {
     if (query.error) {
-      // Handle authentication errors
       if (query.error.message.includes('Authentication') || query.error.message.includes('log in')) {
         toast({
-          title: "Session Expired",
-          description: "Please log in again to continue.",
-          variant: "destructive",
+          title: 'Session Expired',
+          description: 'Please log in again to continue.',
+          variant: 'destructive',
         });
-        
-        // Clear user session and redirect to login
+
         logout();
         router.push('/login');
         return;
       }
-      
+
       toast({
         title: 'Error',
         description: query.error.message,
@@ -200,4 +208,3 @@ export function useApiQuery<TResponse = unknown>(
 
   return query;
 }
-
