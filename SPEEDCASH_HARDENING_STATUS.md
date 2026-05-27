@@ -2,6 +2,24 @@
 
 Last updated: 2026-05-27
 
+## Production-readiness documentation pack
+
+A full production-readiness documentation pack now exists under:
+
+```text
+docs/production-readiness/
+```
+
+Start with:
+
+- `docs/production-readiness/README.md`
+- `docs/production-readiness/00_EXECUTIVE_VERDICT.md`
+- `docs/production-readiness/05_MONEY_MOVEMENT_STATE_MACHINES.md`
+- `docs/production-readiness/12_90_DAY_ROADMAP.md`
+- `docs/production-readiness/14_PRODUCTION_GO_NO_GO_CHECKLIST.md`
+
+This docs pack is the current operating plan for moving Speedcash from pre-production prototype to production-reviewable fintech platform.
+
 ## What has landed on `main`
 
 - App metadata renamed from CPay Investor Demo to Speedcash.
@@ -21,33 +39,21 @@ Last updated: 2026-05-27
 - Admin dashboard stats now return both `pendingKyc` / `pendingWithdrawals` and legacy `pendingKycCount` / `pendingWithdrawalsCount`.
 - Ledger helper added under `functions/src/ledger/entries.ts`.
 - Root Jest command no longer uses `--passWithNoTests`.
-- `CI_TEMPLATE.yml` added at repo root because connector writes to `.github/workflows` were blocked.
+- Production-readiness architecture docs added under `docs/production-readiness/`.
 
 ## Current blockers
 
-### 1. `package-lock.json`
+### 1. Build / CI truth
 
-The stale root lockfile still identified the app as `nextn`. It was removed from `main` because the connector could not safely rewrite the full 18k-line lockfile.
+Confirm the active branch has:
 
-Run locally:
+- valid root `package-lock.json`
+- valid functions lockfile
+- `.github/workflows/ci.yml`
+- Node 20 alignment
+- green lint, typecheck, tests, frontend build, and functions build
 
-```bash
-npm install --package-lock-only
-```
-
-Then commit the regenerated `package-lock.json`.
-
-### 2. CI workflow placement
-
-`CI_TEMPLATE.yml` exists at repo root. Move it to:
-
-```text
-.github/workflows/ci.yml
-```
-
-The connector blocked direct creation inside `.github/workflows`.
-
-### 3. Transaction handler still needs local patching
+### 2. Transaction handler still needs production money-state patching
 
 `functions/src/transactions/handlers.ts` still needs the cash-in fix:
 
@@ -57,9 +63,7 @@ The connector blocked direct creation inside `.github/workflows`.
 - Provider reference IDs must be unique.
 - P2P should be wired to immutable ledger entries.
 
-The connector repeatedly blocked full-file writes to this file, so patch it locally or through Codex.
-
-### 4. Dispatcher backend CORS still needs local patching
+### 3. Dispatcher backend CORS still needs local patching
 
 `functions/src/dispatcher.ts` still needs direct backend method/origin hardening:
 
@@ -70,7 +74,7 @@ The connector repeatedly blocked full-file writes to this file, so patch it loca
 
 The frontend proxy was patched, but the backend dispatcher itself still needs a local patch.
 
-### 5. Channel aggregator still needs local patching
+### 4. Channel aggregator still needs local patching
 
 `functions/src/integrations/channel-aggregator.ts` still needs:
 
@@ -78,7 +82,26 @@ The frontend proxy was patched, but the backend dispatcher itself still needs a 
 - Fail-closed behavior when required env vars are missing.
 - Log redaction for signatures, account numbers, mobile numbers, account names, emails, headers, and provider payloads.
 
-The connector blocked this full-file rewrite.
+### 5. Provider and webhook control plane is incomplete
+
+Speedcash still needs:
+
+- webhook event persistence
+- provider event dedupe
+- idempotent state transitions
+- provider status normalization
+- dead-letter handling
+- provider settlement file ingestion
+
+### 6. Reconciliation is missing
+
+Speedcash still needs:
+
+- scheduled reconciliation jobs
+- wallet vs ledger comparison
+- provider clearing comparison
+- variance reports
+- escalation for unexplained variance
 
 ## Required local verification commands
 
@@ -97,12 +120,12 @@ cd functions && npm install && npm run build
 
 Do not deploy this as live fintech yet. The repo is hardened compared with the starting point, but real production readiness still requires:
 
-- Rotated secrets.
-- Git history cleanup or permanent compromise assumption.
-- Regenerated lockfile.
-- CI workflow enabled.
-- Provider-confirmed cash-in/cash-out state machines.
-- Ledger coverage across all balance-moving flows.
-- Webhook idempotency.
-- Daily reconciliation.
-- Staging test evidence.
+- rotated secrets
+- git history cleanup or permanent compromise assumption
+- green CI
+- provider-confirmed cash-in/cash-out state machines
+- ledger coverage across all balance-moving flows
+- webhook idempotency
+- daily reconciliation
+- staging test evidence
+- production go/no-go checklist completion
