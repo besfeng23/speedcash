@@ -1,23 +1,20 @@
-
 import * as admin from 'firebase-admin';
+
 admin.initializeApp();
 
 // --- AUTH TRIGGERS ---
-// export { onUserCreate } from './auth/triggers'; // TODO: Fix auth triggers
+export { onUserCreate } from './auth/triggers';
 
 // --- MAIN DISPATCHER ---
 // All callable functions are routed through this single entry point.
 export { cpayDispatcher } from './dispatcher';
 
-// Export auth triggers
-// export { onUserCreate } from './auth/triggers'; // TODO: Fix auth triggers
-
 // Export individual functions for direct access
-export { 
-  submitKycHandler, 
-  adminUpdateKycStatusHandler, 
-  addKycDocumentHandler, 
-  adminDeleteKycDocumentHandler 
+export {
+  submitKycHandler,
+  adminUpdateKycStatusHandler,
+  addKycDocumentHandler,
+  adminDeleteKycDocumentHandler,
 } from './kyc/handlers';
 
 // --- TEST FUNCTION ---
@@ -32,7 +29,7 @@ export { expressTest } from './express-test';
 // --- SPEEDYPAY WEBHOOK HANDLERS ---
 // SpeedyPay webhook functionality integrated into simpleTest function
 // Original standalone webhooks temporarily commented out due to org policy build service account issues
-// export { 
+// export {
 //   speedypayWebhook
 // } from './partners/speedypay-webhook';
 // export {
